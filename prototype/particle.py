@@ -54,7 +54,7 @@ class Particle:
         self._props_local["vel"] = np.array([0,0,0])
         self._props_local["acc"] = np.array([0,0,0])
 
-    def net_force_from(self, other, t):
+    def net_force_from(self, other, t) -> float:
         """
         Calculate net force vector induced by `other`. 
         """
@@ -76,7 +76,14 @@ class Particle:
         return net_force * unit_vec
 
     def update_props(self, net_force, dt):
+        # Rules applying to all instances
         for _, rule in self._update_rules_global.items():
+            try:
+                rule(self, net_force, dt)
+            except KeyError: # Throw errors unrelated to missing properties.
+                pass
+        # Rules applying only to this instance
+        for _, rule in self._update_rules_local.items():
             try:
                 rule(self, net_force, dt)
             except KeyError: # Throw errors unrelated to missing properties.
