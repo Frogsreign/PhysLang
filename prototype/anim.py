@@ -39,10 +39,11 @@ def config_bg(ax: matplotlib.axes.Axes):
   ax.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
 
 
-def config_plot_limits(ax, xlim, ylim, zlim):
-    ax.set(xlim3d=xlim)
-    ax.set(ylim3d=ylim)
-    ax.set(zlim3d=zlim)
+def config_plot_limits(ax, xlim, ylim, zlim, origin=(0,0,0)):
+    # Center the plot at `origin`
+    ax.set(xlim3d=(xlim[0] + origin[0], xlim[1] + origin[0]))
+    ax.set(ylim3d=(ylim[0] + origin[1], ylim[1] + origin[1]))
+    ax.set(zlim3d=(zlim[0] + origin[2], zlim[1] + origin[2]))
 
 
 def create_animation(fig, ax, dt, steps_per_update, particles):
@@ -74,10 +75,7 @@ def step(t, dt, steps_per_update, particles):
                 continue
             df += particles[i].net_force_from(particles[j], t)
 
-        particles[i].set("acc", df / particles[i].get("mass"))
-        particles[i].set("vel", particles[i].get("vel") + (dt / steps_per_update) * particles[i].get("acc"))
-        particles[i].set("pos", particles[i].get("pos") + (dt / steps_per_update) * particles[i].get("vel"))
-
+        particles[i].update_props(df, dt / steps_per_update)
 
 # Outputted update.
 def update_p(t, dt, steps_per_update, particles):

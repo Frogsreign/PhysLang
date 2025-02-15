@@ -9,10 +9,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 SUN_TO_PLUTO_DISTANCE = 59064e8
-ASTRONOMICAL_UNIT = 149597871e3
+
+def newtonian_update(p: Particle, net_force, dt):
+    """
+    Update acceleration, velocity, then position.
+    """
+    p.set("acc", net_force / p.get("mass"))
+    p.set("vel", p.get("vel") + (dt) * p.get("acc"))
+    p.set("pos", p.get("pos") + (dt) * p.get("vel"))
 
 def add_forces():
-    Particle.add_force("gravity", forces.f_grav)
+    # Check out what happens when you delete one of these lines. The simulation
+    # still runs, but without the missing instruction.
+    Particle.add_force_global("gravity", forces.f_grav)
+    Particle.add_update_rule_global("pos_update", newtonian_update)
 
 def decode_planet(obj: dict):
     planet = Particle(obj["name"])
@@ -46,7 +56,7 @@ if __name__ == '__main__':
     config_fig(fig)
     config_bg(ax)
     config_plot_limits(
-            ax, 
+            ax,
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE))
