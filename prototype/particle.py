@@ -1,3 +1,4 @@
+
 import numpy as np
 from collections.abc import Callable
 
@@ -5,14 +6,14 @@ class Particle:
     """
     Universal particle. All particles share all properties.
     """
-    # Class members
     _forces: dict[str, Callable] = {}
 
     @classmethod
     def add_force(cls, force_name: str, force_func: Callable):
         cls._forces[force_name] = force_func
 
-    def __init__(self):
+    def __init__(self, name=None):
+        self._name = name
         self._props: dict = {}
         self._init_default()
 
@@ -29,7 +30,7 @@ class Particle:
         Calculate net force vector induced by `other`. 
         """
         net_force = 0
-        for name, force in self._forces.items():
+        for _, force in self._forces.items():
             net_force += force(t, self, other)
 
         unit_vec = (other.get("pos") - self.get("pos")) / np.linalg.norm(other.get("pos") - self.get("pos"))
@@ -40,3 +41,11 @@ class Particle:
         
     def get(self, prop_name):
         return self._props[prop_name]
+
+    def __str__(self):
+        s = f"\"{self._name}\" ({id(self)})"
+        s += "\n\tproperties:"
+        for name, val in self._props.items():
+            s += f"\n\t\t{name}: {val}"
+        return s
+

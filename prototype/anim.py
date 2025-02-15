@@ -4,6 +4,7 @@
 import matplotlib
 import numpy as np
 import matplotlib.animation as animation
+import matplotlib.axes
 
 
 def config_fig(fig):
@@ -46,7 +47,7 @@ def config_plot_limits(ax, xlim, ylim, zlim):
 
 def create_animation(fig, ax, dt, steps_per_update, particles):
     # Initialize point objects.
-    num_points = 2
+    num_points = len(particles)
     points = [ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
 
     # Function to update the animation
