@@ -5,7 +5,6 @@ from particle import Particle
 from anim import *
 from sim_state import SimState
 
-import time
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,9 +51,6 @@ if __name__ == '__main__':
     zoom = 0.1
 
     # Create figure and 3D axis.
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-
     sim = Simulation(dt=60 * 60 * 24 * video_speed, 
             steps_per_update=24 * video_speed, 
             state=state)
@@ -68,5 +64,4 @@ if __name__ == '__main__':
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE))
 
     sim.create_animation()
-
     sim.run_animation()

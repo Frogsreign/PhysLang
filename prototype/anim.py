@@ -22,9 +22,16 @@ class Simulation:
         self._dt = dt
         self._steps_per_update = steps_per_update
         self._state = state
-        self._paused = False
+        self._paused = True 
         # Configure event handlers (this will eventually be done in its own function).
         self._fig.canvas.mpl_connect("button_press_event", self._toggle_pause)
+
+    def _toggle_pause(self):
+        if self._paused:
+            self._animation.resume()
+        else:
+            self._animation.pause()
+        self._paused = not self._paused
 
     def _step(self, t):
         for i in range(len(self._state._particles)):
@@ -52,36 +59,33 @@ class Simulation:
 
     def config_bg(self):
       # TODO Ideally this should read from a config file.
+      self._ax.set_axis_off()
+      plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
       # Remove ticks.
-      self._ax.set_xticks([])
-      self._ax.set_yticks([])
-      self._ax.set_zticks([])
+      # self._ax.set_xticks([])
+      # self._ax.set_yticks([])
+      # self._ax.set_zticks([])
       # Remove labels.
-      self._ax.set_xlabel('')
-      self._ax.set_ylabel('')
-      self._ax.set_zlabel('')
-      self._ax.grid(False)
+      # self._ax.set_xlabel('')
+      # self._ax.set_ylabel('')
+      # self._ax.set_zlabel('')
+      # self._ax.grid(False)
       # Make background transparent.
-      self._ax.set_facecolor((1.0, 1.0, 1.0, 0.0))
+      # self._ax.set_facecolor((1.0, 1.0, 1.0, 0.0))
+      # self._fig.patch.set_facecolor((1.0, 1.0, 1.0, 1.0))
       # Hide 3D panes.
-      self._ax.xaxis.pane.fill = False
-      self._ax.yaxis.pane.fill = False
-      self._ax.zaxis.pane.fill = False
+      # self._ax.xaxis.pane.fill = False
+      # self._ax.yaxis.pane.fill = False
+      # self._ax.zaxis.pane.fill = False
       # Set matplotlib.patches.Polygon (pane) edge colors.
-      self._ax.xaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
-      self._ax.yaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
-      self._ax.zaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
+      # self._ax.xaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
+      # self._ax.yaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
+      # self._ax.zaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
       # Hide axis lines.
-      self._ax.xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-      self._ax.yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-      self._ax.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+      # self._ax.xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+      # self._ax.yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
+      # self._ax.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
 
-    def _toggle_pause(self, *args, **kwargs):
-        if self._paused:
-            self._animation.resume()
-        else:
-            self._animation.pause()
-        self._paused = not self._paused
 
     def config_plot_limits(self, xlim, ylim, zlim, origin=(0,0,0)):
         # Center the plot at `origin`
@@ -119,7 +123,6 @@ class Simulation:
     def _save_state(self):
         state_writer = open("data/current_state.json", "w")
         state_writer.write(self._state.to_json())
-
 
     def run_animation(self):
         # To be expanded on.
