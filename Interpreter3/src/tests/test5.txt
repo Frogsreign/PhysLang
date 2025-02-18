@@ -1,0 +1,9 @@
+var i = 2;
+var j = 10;
+var m = j + i;
+if (m > 10) {
+  print "m is greater than 10";
+}
+else {
+  print "m is not greater than 10";
+}
