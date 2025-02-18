@@ -1,10 +1,19 @@
 # See https://matplotlib.org/stable/api/animation_api.html for info on 
 # matplotlib's animation scheme.
 
+from sim_state import SimState
+
 import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 import matplotlib.axes
+
+
+# Next steps:
+#   This should all take place in a `simulation` class with a `state` attribute,
+#   and attributes for all of the various simulation parameters. This will make 
+#   it possible to pause, resume, load and save states, etc.
 
 
 def config_fig(fig):
@@ -46,8 +55,9 @@ def config_plot_limits(ax, xlim, ylim, zlim, origin=(0,0,0)):
     ax.set(zlim3d=(zlim[0] + origin[2], zlim[1] + origin[2]))
 
 
-def create_animation(fig, ax, dt, steps_per_update, particles):
+def create_animation(fig, ax, dt, steps_per_update, state: SimState):
     # Initialize point objects.
+    particles = state._particles
     num_points = len(particles)
     points = [ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
 
@@ -65,6 +75,12 @@ def create_animation(fig, ax, dt, steps_per_update, particles):
             blit=True, 
             repeat=True)
 
+
+def run_animation(state):
+    plt.show()
+    # On exit, save state.
+    state_writer = open("data/current_state.json", "w")
+    state_writer.write(state.to_json())
 
 def step(t, dt, steps_per_update, particles):
     for i in range(len(particles)):

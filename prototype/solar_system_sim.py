@@ -3,7 +3,9 @@
 import forces
 from particle import Particle
 from anim import *
+from sim_state import SimState
 
+import time
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +45,8 @@ if __name__ == '__main__':
     # Simulation objects (particles).
     add_forces()
     planets = create_solar_system()
-   
+    sim = SimState(planets)
+
     # Simulation parameter (s).
     video_speed = 10
     zoom = 0.1
@@ -66,6 +69,6 @@ if __name__ == '__main__':
             ax, 
             dt=60 * 60 * 24 * video_speed, 
             steps_per_update=24 * video_speed, 
-            particles=planets)
+            state=sim)
 
-    plt.show()
+    run_animation(sim)

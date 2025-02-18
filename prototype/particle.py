@@ -39,6 +39,22 @@ class Particle:
     def add_update_rule_global(cls, update_rule_name: str, update_rule_func: Callable):
         cls._update_rules_global[update_rule_name] = update_rule_func
 
+    @classmethod
+    def _cls_dict(cls):
+        # FIXME
+        # Band-aid solution. To work with JSON, we'll need to subclass any object we want to store.
+        rep = {}
+        rep["props"] = cls._props_global
+        forces = {}
+        for name, force in cls._forces_global.items():
+            forces[name] = force.__name__
+        rep["forces"] = forces
+        rules = {}
+        for name, rule in cls._update_rules_global.items():
+            forces[name] = rule.__name__
+        rep["update_rules"] = rules
+        return rep
+
     def __init__(self, name=None):
         self._name = name
         self._props_local: dict = {}
@@ -114,3 +130,29 @@ class Particle:
             s += f"\n\t\t{name}: {val}"
         return s
 
+    def _dict(self):
+        # FIXME
+        # Band-aid solution. To work with JSON, we'll need to subclass any object we want to store.
+        rep = {}
+        rep["name"] = self._name
+        props = {}
+        for name, prop in self._props_local.items():
+            if isinstance(prop, np.ndarray):
+                props[name] = prop.tolist()
+            else:
+                props[name] = prop
+        rep["props"] = props
+
+        forces = {}
+        for name, force in self._forces_local.items():
+            # Callable...
+            forces[name] = force.__name__
+        rep["forces"] = forces
+
+        update_rules = {}
+        for name, rule in self._forces_local.items():
+            # Callable...
+            forces[name] = rule.__name__ 
+        rep["update_rules"] = update_rules 
+
+        return rep
