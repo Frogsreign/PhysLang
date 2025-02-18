@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Simulation objects (particles).
     add_forces()
     planets = create_solar_system()
-    sim = SimState(planets)
+    state = SimState(planets)
 
     # Simulation parameter (s).
     video_speed = 10
@@ -55,20 +55,18 @@ if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
 
+    sim = Simulation(dt=60 * 60 * 24 * video_speed, 
+            steps_per_update=24 * video_speed, 
+            state=state)
+
     # Setup background.
-    config_fig(fig)
-    config_bg(ax)
-    config_plot_limits(
-            ax,
+    sim.config_fig()
+    sim.config_bg()
+    sim.config_plot_limits(
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE))
 
-    ani = create_animation(
-            fig, 
-            ax, 
-            dt=60 * 60 * 24 * video_speed, 
-            steps_per_update=24 * video_speed, 
-            state=sim)
+    sim.create_animation()
 
-    run_animation(sim)
+    sim.run_animation()
