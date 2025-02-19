@@ -10,18 +10,24 @@ import numpy as np
 
 SUN_TO_PLUTO_DISTANCE = 59064e8
 
-def newtonian_update(p: Particle, net_force, dt):
-    """
-    Update acceleration, velocity, then position.
-    """
-    p.set("acc", net_force / p.get("mass"))
-    p.set("vel", p.get("vel") + (dt) * p.get("acc"))
+def pos_update(p: Particle, net_force, dt):
     p.set("pos", p.get("pos") + (dt) * p.get("vel"))
+
+def vel_update(p: Particle, net_force, dt):
+    p.set("vel", p.get("vel") + (dt) * p.get("acc"))
+
+def acc_update(p: Particle, net_force, dt):
+    p.set("acc", net_force / p.get("mass"))
 
 def decode_planet(obj: dict):
     planet = Particle(obj["name"])
+    # Forces
     planet.add_force("gravity", forces.f_grav)
-    planet.add_update_rule("pos_update", newtonian_update)
+    # Update rules
+    planet.add_update_rule("pos_update", pos_update)
+    planet.add_update_rule("vel_update", vel_update)
+    planet.add_update_rule("acc_update", acc_update)
+    # Properties
     for prop_name in ("mass", "pos", "vel", "acc"):
         prop_val = obj["properties"][prop_name]
         if isinstance(prop_val, list):

@@ -20,7 +20,7 @@ class SimState:
         """
         for particle in self._particles:
             yield particle.get("pos")
-    
+
     def _step(self, dt, t, steps=1):
         """
         Iterate the state of the simulation.
