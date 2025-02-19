@@ -33,24 +33,6 @@ class Simulation:
             self._animation.pause()
         self._paused = not self._paused
 
-    def _step(self, t):
-        for i in range(len(self._state._particles)):
-            # Compute net force between each particle pair.
-            df = np.zeros((3,))
-            for j in range(len(self._state._particles)):
-                if j == i:
-                    continue
-                df += self._state._particles[i].net_force_from(self._state._particles[j], t)
-
-            self._state._particles[i].update_props(df, self._dt / self._steps_per_update)
-
-    # Outputted update.
-    def _update_pos(self, t):
-        for _ in range(self._steps_per_update):
-            # Inner update.
-            self._step(t)
-        for particle in self._state._particles:
-            yield particle.get("pos")
 
     def config_fig(self):
         # A `matplotlib.patches.Patch` is a 2D artist with a face color and an 
@@ -61,31 +43,6 @@ class Simulation:
       # TODO Ideally this should read from a config file.
       self._ax.set_axis_off()
       plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
-      # Remove ticks.
-      # self._ax.set_xticks([])
-      # self._ax.set_yticks([])
-      # self._ax.set_zticks([])
-      # Remove labels.
-      # self._ax.set_xlabel('')
-      # self._ax.set_ylabel('')
-      # self._ax.set_zlabel('')
-      # self._ax.grid(False)
-      # Make background transparent.
-      # self._ax.set_facecolor((1.0, 1.0, 1.0, 0.0))
-      # self._fig.patch.set_facecolor((1.0, 1.0, 1.0, 1.0))
-      # Hide 3D panes.
-      # self._ax.xaxis.pane.fill = False
-      # self._ax.yaxis.pane.fill = False
-      # self._ax.zaxis.pane.fill = False
-      # Set matplotlib.patches.Polygon (pane) edge colors.
-      # self._ax.xaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
-      # self._ax.yaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
-      # self._ax.zaxis.pane.set_edgecolor((1.0, 1.0, 1.0, 0.0))
-      # Hide axis lines.
-      # self._ax.xaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-      # self._ax.yaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-      # self._ax.zaxis.line.set_color((1.0, 1.0, 1.0, 0.0))
-
 
     def config_plot_limits(self, xlim, ylim, zlim, origin=(0,0,0)):
         # Center the plot at `origin`
@@ -93,16 +50,16 @@ class Simulation:
         self._ax.set(ylim3d=(ylim[0] + origin[1], ylim[1] + origin[1]))
         self._ax.set(zlim3d=(zlim[0] + origin[2], zlim[1] + origin[2]))
 
-
     def create_animation(self):
         # Initialize point objects.
-        particles = self._state._particles
-        num_points = len(particles)
+        num_points = len(self._state._particles)
         points = [self._ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
 
         # Function to update the animation
         def update(frame):
-            for i, data in enumerate(self._update_pos(frame)):
+            self._state._step(self._dt / self._steps_per_update, frame, 
+                              steps=self._steps_per_update)
+            for i, data in enumerate(self._state.positions()):
                 points[i].set_data_3d(np.expand_dims(data, axis=1))
             return points
 
@@ -120,7 +77,7 @@ class Simulation:
     def pause_animation(self):
         self._animation.event_source.pause()
 
-    def _save_state(self):
+    def save_state(self):
         state_writer = open("data/current_state.json", "w")
         state_writer.write(self._state.to_json())
 

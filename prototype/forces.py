@@ -1,11 +1,11 @@
 import numpy as np
 from particle import Particle
 
-def f_rand(t, a: Particle, b: Particle) -> float:
+def f_rand(a: Particle, b: Particle) -> float:
     "Random force between `a` and `b`"
     return np.random.rand()
     
-def f_grav(t, a: Particle, b: Particle) -> float:
+def f_grav(a: Particle, b: Particle) -> float:
     """
     Classical gravitational pull between `a` and `b`.
     """
@@ -20,7 +20,7 @@ def f_grav(t, a: Particle, b: Particle) -> float:
     else:
         return 0
 
-def f_elec(t, a: Particle, b: Particle) -> float:
+def f_elec(a: Particle, b: Particle) -> float:
     """
     Classical electrostatic force between `a` and `b`.
     """

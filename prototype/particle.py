@@ -1,4 +1,5 @@
 
+import pickle
 import numpy as np
 from collections.abc import Callable
 
@@ -26,7 +27,7 @@ class Particle:
     @classmethod
     def add_prop_global(cls, prop_name: str):
         """
-        Merely adds the name to a list that will always be checked during 
+        Adds the name to a list that will always be checked during 
         simulation.
         """
         cls._props_global.append(prop_name)
@@ -41,6 +42,10 @@ class Particle:
 
     @classmethod
     def _cls_dict(cls):
+        """
+        Converts this subclass's class state to a dictionary that can be 
+        serialized and deserialized.
+        """
         # FIXME
         # Band-aid solution. To work with JSON, we'll need to subclass any object we want to store.
         rep = {}
@@ -72,19 +77,19 @@ class Particle:
 
     def net_force_from(self, other, t) -> float:
         """
-        Calculate net force vector induced by `other`. 
+        Calculate net force vector induced by `other`.
         """
         net_force = 0
         # Forces applying to all instances
         for _, force in self._forces_global.items():
             try:
-                net_force += force(t, self, other)
+                net_force += force(self, other)
             except KeyError: # Throw errors unrelated to missing properties.
                 pass
         # Forces applying only to this instance
         for _, force in self._forces_local.items():
             try:
-                net_force += force(t, self, other)
+                net_force += force(self, other)
             except KeyError: # Throw errors unrelated to missing properties.
                 pass
 
@@ -152,7 +157,7 @@ class Particle:
         update_rules = {}
         for name, rule in self._forces_local.items():
             # Callable...
-            forces[name] = rule.__name__ 
-        rep["update_rules"] = update_rules 
+            forces[name] = rule.__name__
+        rep["update_rules"] = update_rules
 
         return rep
