@@ -7,7 +7,6 @@ from sim_state import SimState
 
 import json
 import numpy as np
-import matplotlib.pyplot as plt
 
 SUN_TO_PLUTO_DISTANCE = 59064e8
 
@@ -19,14 +18,10 @@ def newtonian_update(p: Particle, net_force, dt):
     p.set("vel", p.get("vel") + (dt) * p.get("acc"))
     p.set("pos", p.get("pos") + (dt) * p.get("vel"))
 
-def add_forces():
-    # Check out what happens when you delete one of these lines. The simulation
-    # still runs, but without the missing instruction.
-    Particle.add_force_global("gravity", forces.f_grav)
-    Particle.add_update_rule_global("pos_update", newtonian_update)
-
 def decode_planet(obj: dict):
     planet = Particle(obj["name"])
+    planet.add_force("gravity", forces.f_grav)
+    planet.add_update_rule("pos_update", newtonian_update)
     for prop_name in ("mass", "pos", "vel", "acc"):
         prop_val = obj["properties"][prop_name]
         if isinstance(prop_val, list):
@@ -42,7 +37,6 @@ def create_solar_system():
 
 if __name__ == '__main__':
     # Simulation objects (particles).
-    add_forces()
     planets = create_solar_system()
     state = SimState(planets)
 

@@ -20,46 +20,6 @@ class Particle:
     # any n. This is particularly useful when n = 1, as this case allows `on 
     # earth` simulations.
 
-    _forces_global: dict[str, Callable] = {}
-    _update_rules_global: dict[str, Callable] = {}
-    _props_global: list = []
-
-    @classmethod
-    def add_prop_global(cls, prop_name: str):
-        """
-        Adds the name to a list that will always be checked during 
-        simulation.
-        """
-        cls._props_global.append(prop_name)
-
-    @classmethod
-    def add_force_global(cls, force_name: str, force_func: Callable):
-        cls._forces_global[force_name] = force_func
-
-    @classmethod
-    def add_update_rule_global(cls, update_rule_name: str, update_rule_func: Callable):
-        cls._update_rules_global[update_rule_name] = update_rule_func
-
-    @classmethod
-    def _cls_dict(cls):
-        """
-        Converts this subclass's class state to a dictionary that can be 
-        serialized and deserialized.
-        """
-        # FIXME
-        # Band-aid solution. To work with JSON, we'll need to subclass any object we want to store.
-        rep = {}
-        rep["props"] = cls._props_global
-        forces = {}
-        for name, force in cls._forces_global.items():
-            forces[name] = force.__name__
-        rep["forces"] = forces
-        rules = {}
-        for name, rule in cls._update_rules_global.items():
-            forces[name] = rule.__name__
-        rep["update_rules"] = rules
-        return rep
-
     def __init__(self, name=None):
         self._name = name
         self._props_local: dict = {}
@@ -80,13 +40,6 @@ class Particle:
         Calculate net force vector induced by `other`.
         """
         net_force = 0
-        # Forces applying to all instances
-        for _, force in self._forces_global.items():
-            try:
-                net_force += force(self, other)
-            except KeyError: # Throw errors unrelated to missing properties.
-                pass
-        # Forces applying only to this instance
         for _, force in self._forces_local.items():
             try:
                 net_force += force(self, other)
@@ -97,12 +50,6 @@ class Particle:
         return net_force * unit_vec
 
     def update_props(self, net_force, dt):
-        # Rules applying to all instances
-        for _, rule in self._update_rules_global.items():
-            try:
-                rule(self, net_force, dt)
-            except KeyError: # Throw errors unrelated to missing properties.
-                pass
         # Rules applying only to this instance
         for _, rule in self._update_rules_local.items():
             try:
@@ -110,10 +57,10 @@ class Particle:
             except KeyError: # Throw errors unrelated to missing properties.
                 pass
 
-    def add_force_local(self, force_name: str, force_func: Callable):
+    def add_force(self, force_name: str, force_func: Callable):
         self._forces_local[force_name] = force_func
 
-    def add_update_rule_local(self, update_rule_name: str, update_rule_func: Callable):
+    def add_update_rule(self, update_rule_name: str, update_rule_func: Callable):
         self._update_rules_local[update_rule_name] = update_rule_func
 
     def set(self, prop_name, val):

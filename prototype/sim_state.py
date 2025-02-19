@@ -51,5 +51,4 @@ class SimState:
         Output a serialized representation of the simulation state.
         """
         obj_list = [p._dict() for p in self._particles]
-        par_json = Particle._cls_dict()
-        return json.JSONEncoder().encode({"global": par_json, "particles": obj_list})
+        return json.JSONEncoder().encode({"particles": obj_list})
