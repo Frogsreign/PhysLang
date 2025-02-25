@@ -1,9 +1,15 @@
 # imports
 
-# list of token types
+# List of token types
+# Value types
 NUMBER, STRING = 'NUMBER', 'STRING' 
+
+# Structure symbols
 LEFT_PAREN, RIGHT_PAREN, LEFT_BRACK, RIGHT_BRACK = 'LEFT_PAREN', 'RIGHT_PAREN', 'LEFT_BRACK', 'LEFT_BRACK'
 COMMA, EOL, EOF = 'COMMA', 'EOL', 'EOF'
+
+# Reserved words
+POINT, SOLID, FORCE = 'POINT', 'SOLID', 'FORCE'
 
 # Token class
 class Token(object):
@@ -66,7 +72,7 @@ class Interpreter(object):
         # index to point to the next character after the digit,
         # and return the INTEGER token
         if current_char.isdigit():
-            token = Token(INTEGER, int(current_char))
+            token = Token(NUMBER, int(current_char))
             self.pos += 1
             return token
 

@@ -107,6 +107,7 @@ class Simulation:
                     self.hist_z[i, frame%self.hist_len] = data[2]
                 for hx, hy, hz, ln_h in zip(self.hist_x, self.hist_y, self.hist_z, self.hist):
                     ln_h.set_data_3d((hx, hy, hz))
+                # self.config_plot_limits_track()
                 return tuple(points) + tuple(self.hist)
 
         self._animation = animation.FuncAnimation(
