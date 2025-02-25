@@ -9,7 +9,7 @@ def f_grav(a: Particle, b: Particle) -> float:
     """
     Classical gravitational pull between `a` and `b`.
     """
-    TOL = 1e-5
+    TOL = 1e-4
     G = 6.67430e-11     # Gravitational constant                
 
     d = np.linalg.norm(b.get("pos") - a.get("pos")) 
@@ -24,7 +24,7 @@ def f_elec(a: Particle, b: Particle) -> float:
     """
     Classical electrostatic force between `a` and `b`.
     """
-    TOL = 1e-5
+    TOL = 1e-4
     ke = 8.99e9     # Gravitational constant                
 
     d = np.linalg.norm(b.get("pos") - a.get("pos")) 

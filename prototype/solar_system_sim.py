@@ -29,7 +29,7 @@ def decode_planet(obj: dict):
     return planet
 
 def create_solar_system():
-    planets_json_file = open("data/annihilate_solar.json", "r")
+    planets_json_file = open("data/solar_system.json", "r")
     objs = json.JSONDecoder().decode(planets_json_file.read())
     planets_json_file.close()
     return [decode_planet(obj) for obj in objs]

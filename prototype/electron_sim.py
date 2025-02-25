@@ -9,19 +9,19 @@ from sim_state import SimState
 import json
 import numpy as np
 
-SCALE = 100
+SCALE = 1e20
 
 def decode_particle(obj: dict):
     particle = Particle(obj["name"])
     # Forces
-    particle.add_force("gravity", forces.f_grav)
+    #particle.add_force("gravity", forces.f_grav)
     particle.add_force("electromagnetism", forces.f_elec)
     # Update rules
     particle.add_update_rule("pos_update", update_rules.pos_update)
     particle.add_update_rule("vel_update", update_rules.vel_update)
     particle.add_update_rule("acc_update", update_rules.acc_update)
     # Properties
-    for prop_name in ("mass", "pos", "vel", "acc"):
+    for prop_name in ("mass", "pos", "vel", "acc", "e_charge"):
         prop_val = obj["properties"][prop_name]
         if isinstance(prop_val, list):
             prop_val = np.array(prop_val)
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     # Setup background.
     sim.config_fig()
     sim.config_bg()
+    sim.config_plot_limits_track()
     sim.config_plot_limits(
             (-zoom * SCALE, zoom * SCALE), 
             (-zoom * SCALE, zoom * SCALE), 
