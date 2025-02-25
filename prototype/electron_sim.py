@@ -9,7 +9,7 @@ from sim_state import SimState
 import json
 import numpy as np
 
-SCALE = 1e20
+SCALE = 100
 
 def decode_particle(obj: dict):
     particle = Particle(obj["name"])
@@ -44,8 +44,8 @@ if __name__ == '__main__':
     zoom = 0.1
 
     # Create figure and 3D axis.
-    sim = Simulation(dt=60 * 60 * 24 * video_speed, 
-            steps_per_update=24 * video_speed, 
+    sim = Simulation(dt=video_speed, 
+            steps_per_update=video_speed, 
             state=state)
 
     # Setup background.

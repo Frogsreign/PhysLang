@@ -5,6 +5,7 @@ def pos_update(p: Particle, net_force, dt):
     Increments position by the change in time times the velocity.
     """
     p.set("pos", p.get("pos") + dt * p.get("vel"))
+    print(p._name, " Pos: ", p.get("pos"))
 
 def vel_update(p: Particle, net_force, dt):
     """
@@ -17,3 +18,4 @@ def acc_update(p: Particle, net_force, dt):
     Sets the acceleration to the net force applied divided by the mass.
     """
     p.set("acc", net_force / p.get("mass"))
+    print(p._name, " Acc: ", net_force / p.get("mass"))

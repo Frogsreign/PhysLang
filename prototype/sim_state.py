@@ -43,7 +43,7 @@ class SimState:
                     if j == i:
                         continue
                     df += self._particles[i].net_force_from(self._particles[j], t)
-
+                
                 self._particles[i].update_props(df, dt)
 
     def to_json(self) -> str: 
