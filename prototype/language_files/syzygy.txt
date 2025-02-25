@@ -1,0 +1,2 @@
+point(m, e, [x, y, z], [vx, vy, vz], [ax, ay ,az])
+solid(m, e, [x, y, z], [l, w, d], [vx, vy, vz], [ax, ay, az])

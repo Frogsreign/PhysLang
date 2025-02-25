@@ -9,30 +9,30 @@ from sim_state import SimState
 import json
 import numpy as np
 
-SUN_TO_PLUTO_DISTANCE = 59064e8
+SCALE = 100
 
-
-def decode_planet(obj: dict):
-    planet = Particle(obj["name"])
+def decode_particle(obj: dict):
+    particle = Particle(obj["name"])
     # Forces
-    planet.add_force("gravity", forces.f_grav)
+    particle.add_force("gravity", forces.f_grav)
+    particle.add_force("electromagnetism", forces.f_elec)
     # Update rules
-    planet.add_update_rule("pos_update", update_rules.pos_update)
-    planet.add_update_rule("vel_update", update_rules.vel_update)
-    planet.add_update_rule("acc_update", update_rules.acc_update)
+    particle.add_update_rule("pos_update", update_rules.pos_update)
+    particle.add_update_rule("vel_update", update_rules.vel_update)
+    particle.add_update_rule("acc_update", update_rules.acc_update)
     # Properties
     for prop_name in ("mass", "pos", "vel", "acc"):
         prop_val = obj["properties"][prop_name]
         if isinstance(prop_val, list):
             prop_val = np.array(prop_val)
-        planet.set(prop_name, prop_val)
-    return planet
+        particle.set(prop_name, prop_val)
+    return particle
 
 def create_solar_system():
-    planets_json_file = open("data/annihilate_solar.json", "r")
+    planets_json_file = open("data/coulomb.json", "r")
     objs = json.JSONDecoder().decode(planets_json_file.read())
     planets_json_file.close()
-    return [decode_planet(obj) for obj in objs]
+    return [decode_particle(obj) for obj in objs]
 
 if __name__ == '__main__':
     # Simulation objects (particles).
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     state = SimState(planets)
 
     # Simulation parameter (s).
-    video_speed = 10
+    video_speed = 1
     zoom = 0.1
 
     # Create figure and 3D axis.
@@ -52,9 +52,9 @@ if __name__ == '__main__':
     sim.config_fig()
     sim.config_bg()
     sim.config_plot_limits(
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE))
+            (-zoom * SCALE, zoom * SCALE), 
+            (-zoom * SCALE, zoom * SCALE), 
+            (-zoom * SCALE, zoom * SCALE))
 
     sim.create_animation()
     sim.run_animation()

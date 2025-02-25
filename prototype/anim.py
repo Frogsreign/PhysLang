@@ -22,18 +22,19 @@ class Simulation:
         self._dt = dt
         self._steps_per_update = steps_per_update
         self._state = state
-        self._paused = True 
+        self._paused = False 
         # Configure event handlers (this will eventually be done in its own function).
         self._fig.canvas.mpl_connect("button_press_event", self._toggle_pause)
 
-    def _toggle_pause(self):
+    def _toggle_pause(self, _):
         if self._paused:
             self._animation.resume()
+            print("Unpaused")
         else:
             self._animation.pause()
+            print("Paused")
         self._paused = not self._paused
-
-
+        
     def config_fig(self):
         # A `matplotlib.patches.Patch` is a 2D artist with a face color and an 
         # edge color.
@@ -54,22 +55,33 @@ class Simulation:
         # Initialize point objects.
         num_points = len(self._state._particles)
         points = [self._ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
+        print(np.shape(points))
+        hist = 10
+        points_hist = np.zeros((hist, num_points))
+        for i in range(hist):
+            points_hist = [self._ax.plot([], [], [], 'o', markersize=1) for _ in range(num_points)]
 
+
+        self._paused = True
+        
         # Function to update the animation
         def update(frame):
-            self._state._step(self._dt / self._steps_per_update, frame, 
-                              steps=self._steps_per_update)
-            for i, data in enumerate(self._state.positions()):
-                points[i].set_data_3d(np.expand_dims(data, axis=1))
-            return points
+            if self._paused: return points
+            else:
+                self._state._step(self._dt / self._steps_per_update, frame, 
+                                steps=self._steps_per_update)
+                for i, data in enumerate(self._state.positions()):
+                    points[i].set_data_3d(np.expand_dims(data, axis=1))
+                    points_hist = [self._ax.plot([], [], [], 'o', color='black', markersize=5)[0] for _ in range(num_points)]
+                return points
 
         self._animation = animation.FuncAnimation(
                 self._fig, 
                 update, 
                 frames=np.arange(0, 10000), 
                 interval=50, 
-                blit=True, 
-                repeat=True)
+                blit=True) 
+                #repeat=True)
 
     def resume_animation(self):
         self._animation.event_source.resume()
