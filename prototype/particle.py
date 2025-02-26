@@ -29,9 +29,9 @@ class Particle:
         """
         By default, a particle is stationary at the origin.
         """
-        self._props_local["pos"] = np.array([0,0,0])
-        self._props_local["vel"] = np.array([0,0,0])
-        self._props_local["acc"] = np.array([0,0,0])
+        self._props_local["pos"] = np.array([0,0,0], dtype=np.float64)
+        self._props_local["vel"] = np.array([0,0,0], dtype=np.float64)
+        self._props_local["acc"] = np.array([0,0,0], dtype=np.float64)
 
     def net_force_from(self, other, t) -> float:
         """
@@ -106,3 +106,9 @@ class Particle:
         rep["update_rules"] = update_rules
 
         return rep
+    
+    def __getitem__(self, item):
+        return self.get(item)
+
+    def props(self):
+        return self._props_local
