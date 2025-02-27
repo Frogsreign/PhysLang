@@ -1,92 +1,300 @@
-[
-  {
-    "name": "Sun",
-    "properties": {
-      "mass": 1.989e30,
-      "pos": [0, 0, 0],
-      "vel": [0, 0, 0],
-      "acc": [0, 0, 0]
+{
+  "name": "group1",
+  "forces": {
+    "gravity-0": {
+      "in": ["obj1.mass", "obj2.mass", "obj1.pos", "obj2.pos"],
+      "out": "obj1.net-force.idx:0",
+      "func": [
+        "*",
+        6.6743e-11,
+        [
+          "*",
+          [
+            "*",
+            "obj1.mass",
+            [
+              "*",
+              "obj2.mass",
+              [
+                "/",
+                [
+                  "^",
+                  [
+                    "^",
+                    [
+                      "+",
+                      [
+                        "^",
+                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
+                        2
+                      ],
+                      [
+                        "+",
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
+                          2
+                        ],
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
+                          2
+                        ]
+                      ]
+                    ],
+                    0.5
+                  ],
+                  3
+                ]
+              ]
+            ]
+          ],
+          ["+", ["-", "obj1.pos.idx:0"], "obj2.pos.idx:0"]
+        ]
+      ]
+    },
+    "gravity-1": {
+      "in": [],
+      "out": "obj1.net-force.idx:1",
+      "func": [
+        "*",
+        6.6743e-11,
+        [
+          "*",
+          [
+            "*",
+            "obj1.mass",
+            [
+              "*",
+              "obj2.mass",
+              [
+                "/",
+                [
+                  "^",
+                  [
+                    "^",
+                    [
+                      "+",
+                      [
+                        "^",
+                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
+                        2
+                      ],
+                      [
+                        "+",
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
+                          2
+                        ],
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
+                          2
+                        ]
+                      ]
+                    ],
+                    0.5
+                  ],
+                  3
+                ]
+              ]
+            ]
+          ],
+          ["+", ["-", "obj1.pos.idx:1"], "obj2.pos.idx:1"]
+        ]
+      ]
+    },
+    "gravity-2": {
+      "in": [],
+      "out": "obj1.net-force.idx:2",
+      "func": [
+        "*",
+        6.6743e-11,
+        [
+          "*",
+          [
+            "*",
+            "obj1.mass",
+            [
+              "*",
+              "obj2.mass",
+              [
+                "/",
+                [
+                  "^",
+                  [
+                    "^",
+                    [
+                      "+",
+                      [
+                        "^",
+                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
+                        2
+                      ],
+                      [
+                        "+",
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
+                          2
+                        ],
+                        [
+                          "^",
+                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
+                          2
+                        ]
+                      ]
+                    ],
+                    0.5
+                  ],
+                  3
+                ]
+              ]
+            ]
+          ],
+          ["+", ["-", "obj1.pos.idx:2"], "obj2.pos.idx:2"]
+        ]
+      ]
     }
   },
-  {
-    "name": "Mercury",
-    "properties": {
-      "mass": 3.3e23,
-      "pos": [0, 58343169690, 0],
-      "vel": [47900, 0, 0],
-      "acc": [0, 0, 0]
+  "update-rules": {
+    "pos-update-x": {
+      "in": ["obj.pos.idx:0", "obj.vel.idx:0"],
+      "out": "obj.pos.idx:0",
+      "func": ["+", "obj.pos.idx:0", ["*", "dt", "obj.vel.idx:0"]]
+    },
+    "pos-update-y": {
+      "in": ["obj.pos.idx:1", "obj.vel.idx:1"],
+      "out": "obj.pos.idx:1",
+      "func": ["+", "obj.pos.idx:1", ["*", "dt", "obj.vel.idx:1"]]
+    },
+    "pos-update-z": {
+      "in": ["obj.pos.idx:2", "obj.vel.idx:2"],
+      "out": "obj.pos.idx:2",
+      "func": ["+", "obj.pos.idx:2", ["*", "dt", "obj.vel.idx:2"]]
+    },
+    "vel-update-x": {
+      "in": ["obj.vel.idx:0", "obj.acc.idx:0"],
+      "out": "obj.vel.idx:0",
+      "func": ["+", "obj.vel.idx:0", ["*", "dt", "obj.acc.idx:0"]]
+    },
+    "vel-update-y": {
+      "in": ["obj.vel.idx:1", "obj.acc.idx:1"],
+      "out": "obj.vel.idx:1",
+      "func": ["+", "obj.vel.idx:1", ["*", "dt", "obj.acc.idx:1"]]
+    },
+    "vel-update-z": {
+      "in": ["obj.vel.idx:2", "obj.acc.idx:2"],
+      "out": "obj.vel.idx:2",
+      "func": ["+", "obj.vel.idx:2", ["*", "dt", "obj.acc.idx:2"]]
+    },
+    "acc-update-x": {
+      "in": ["obj.mass"],
+      "out": "obj.acc.idx:0",
+      "func": ["*", "obj.net-force.idx:0", ["/", "obj.mass"]]
+    },
+    "acc-update-y": {
+      "in": ["obj.mass"],
+      "out": "obj.acc.idx:1",
+      "func": ["*", "obj.net-force.idx:1", ["/", "obj.mass"]]
+    },
+    "acc-update-z": {
+      "in": ["obj.mass"],
+      "out": "obj.acc.idx:2",
+      "func": ["*", "obj.net-force.idx:2", ["/", "obj.mass"]]
     }
   },
-  {
-    "name": "Venus",
-    "properties": {
-      "mass": 4.87e24,
-      "pos": [0, 107710467120, 0],
-      "vel": [35000, 0, 0],
-      "acc": [0, 0, 0]
+  "particles": [
+    {
+      "name": "Sun",
+      "props": {
+        "mass": 1.989e30,
+        "pos": [0, 0, 0],
+        "vel": [0, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Mercury",
+      "props": {
+        "mass": 3.3e23,
+        "pos": [0, 58343169690, 0],
+        "vel": [47900, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Venus",
+      "props": {
+        "mass": 4.87e24,
+        "pos": [0, 107710467120, 0],
+        "vel": [35000, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Earth",
+      "props": {
+        "mass": 5.969999999999999e24,
+        "pos": [0, 149597871000, 0],
+        "vel": [29800, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Mars",
+      "props": {
+        "mass": 6.42e23,
+        "pos": [0, 227388763920, 0],
+        "vel": [24000, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Jupiter",
+      "props": {
+        "mass": 1.898e27,
+        "pos": [0, 777908929200, 0],
+        "vel": [13100, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Saturn",
+      "props": {
+        "mass": 5.68e26,
+        "pos": [0, 1433147604180, 0],
+        "vel": [9690, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Uranus",
+      "props": {
+        "mass": 8.68e25,
+        "pos": [0, 2872279123200, 0],
+        "vel": [6810, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Neptune",
+      "props": {
+        "mass": 1.0199999999999999e26,
+        "pos": [0, 4502895917100, 0],
+        "vel": [5430, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Pluto",
+      "props": {
+        "mass": 1.3e22,
+        "pos": [0, 8841234176100, 0],
+        "vel": [4700, 0, 0],
+        "acc": [0, 0, 0]
+      }
     }
-  },
-  {
-    "name": "Earth",
-    "properties": {
-      "mass": 5.969999999999999e24,
-      "pos": [0, 149597871000, 0],
-      "vel": [29800, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Mars",
-    "properties": {
-      "mass": 6.42e23,
-      "pos": [0, 227388763920, 0],
-      "vel": [24000, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Jupiter",
-    "properties": {
-      "mass": 1.898e27,
-      "pos": [0, 777908929200, 0],
-      "vel": [13100, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Saturn",
-    "properties": {
-      "mass": 5.68e26,
-      "pos": [0, 1433147604180, 0],
-      "vel": [9690, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Uranus",
-    "properties": {
-      "mass": 8.68e25,
-      "pos": [0, 2872279123200, 0],
-      "vel": [6810, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Neptune",
-    "properties": {
-      "mass": 1.0199999999999999e26,
-      "pos": [0, 4502895917100, 0],
-      "vel": [5430, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  },
-  {
-    "name": "Pluto",
-    "properties": {
-      "mass": 1.3e22,
-      "pos": [0, 8841234176100, 0],
-      "vel": [4700, 0, 0],
-      "acc": [0, 0, 0]
-    }
-  }
-]
+  ]
+}

@@ -80,7 +80,7 @@ def get_default_compiler_options():
     return {
         "variables_predefined": False,
         "output_lang": "py",
-        "var_converter": ast_var_to_function_var
+        "var_name_mapper": ast_var_to_function_var
     }
 
 
@@ -117,7 +117,7 @@ def handle_variable(curr, variables, options):
         # 
         # We'd need to pass in the variable-to-index map to the 
         # compiler.
-        converter = options["var_converter"]
+        converter = options["var_name_mapper"]
         curr.set_expr(converter(curr.node()))
     else:   
         variables.append(curr.node())
@@ -133,18 +133,25 @@ def format_arg_list(variables, lang):
     else:
         return NotImplemented
 
-def format_function_definition(name, variables, expr, options):
+def format_function_definition(variables, expr, options):
     lang = options["output_lang"]
+    if "func_name" in options:
+        func_name = options["func_name"]
+    else:
+        func_name = get_default_func_name()
     arg_list = format_arg_list(variables, lang) 
     if lang == "py":
-        return "lambda " + arg_list + ": " + expr
+        func_code = "lambda " + arg_list + ": " + expr
     elif lang == "c":
         # Return type = float for now. Return types should be determined
         # by the user, possibly implicitly.
-        return " ".join([
-            "float", name, f"({arg_list})", "{", 
+        func_code = " ".join([
+            "float", func_name, f"({arg_list})", "{", 
             "return", expr, ";", 
             "}"])
+    else:
+        return NotImplemented
+    return func_name, func_code
 
 def format_expr(opcode, subs, options):
     lang = options["output_lang"]
@@ -187,12 +194,20 @@ def process_subexprs(curr, stack, options):
 # Compilation entry point.
 def compile_tree(
         syntax_tree, 
-        func_name=None, 
-        old_variables=None, 
+        variables=None, 
         compiler_options=None):
     """
     Convert the syntax tree to a compiled (python bytecode) python 
     lambda.
+
+    Args:
+        syntax_tree (list): A bracketted syntax tree.
+        func_name (str): The function's name.
+        variables (list): A list of str instances that become arguments 
+        to the returned function.
+
+    Returns:
+        tuple[str, str]: The function name, and the function code.
     """
     # Initializations --------------------------------------------------
     init_op_table()
@@ -200,10 +215,6 @@ def compile_tree(
     root.set_node(syntax_tree)
 
     # Validate keyword args --------------------------------------------
-    # Validate `func_name`
-    if func_name is None:
-        func_name = get_default_func_name()
-
     # Validate `options`
     options = get_default_compiler_options()
     if compiler_options is not None:
@@ -211,11 +222,10 @@ def compile_tree(
             options[k] = v
 
     # Validate `old_variables`
-    if old_variables is None:
+    if variables is None:
         variables = []
         options["variables_predefined"] = False
     else:
-        variables = old_variables
         options["variables_predefined"] = True
 
     # DFS for compilation ----------------------------------------------
@@ -236,6 +246,6 @@ def compile_tree(
             stack.pop()
 
     # Create function signature ----------------------------------------
-    func_code = format_function_definition(
-            func_name, variables, root.expr(), options)
+    func_name, func_code = format_function_definition(
+            variables, root.expr(), options)
     return func_name, func_code

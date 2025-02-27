@@ -52,7 +52,7 @@ class Simulation:
 
     def create_animation(self):
         # Initialize point objects.
-        num_points = len(self._state._particles)
+        num_points = self._state._offset_map.num_particles()
         points = [self._ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
 
         # Function to update the animation

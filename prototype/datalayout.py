@@ -6,35 +6,96 @@ import numpy
 import json
 
 class OffsetMap:
-    def __init__(self, particle_name_to_idx, prop_name_to_idx, prop_offsets, particle_size):
+    def __init__(self, particle_name_to_idx, prop_name_to_idx, prop_offsets, prop_sizes, num_particles, particle_size):
         self._particle_name_to_idx = particle_name_to_idx
         self._prop_name_to_idx = prop_name_to_idx
         self._particle_size = particle_size
         self._prop_offsets = prop_offsets
+        self._prop_sizes = prop_sizes
+        self._num_particles = num_particles
 
     def idx_of(self, particle_name, prop_name, index=0):
         particle_offset = self._particle_size * self._particle_name_to_idx[particle_name]
         prop_offset = self._prop_offsets[self._prop_name_to_idx[prop_name]]
         return particle_offset + prop_offset + index
 
+    def prop_offset(self, prop_name) -> int:
+        return self._prop_offsets[self._prop_name_to_idx[prop_name]]
 
-def create_offset_map(sim_json_path):
+    def prop_size(self, prop_name) -> int:
+        return self._prop_sizes[self._prop_name_to_idx[prop_name]]
+
+    def prop_idx_all_particles(self, prop_name):
+        prop_offset = self._prop_offsets[self._prop_name_to_idx[prop_name]]
+        return [particle_idx * self._particle_size + prop_offset 
+                for particle_idx in range(self.num_particles())]
+
+    def sim_dim(self) -> int:
+        return self.prop_size("pos")
+
+    def num_particles(self) -> int:
+        return self._num_particles
+
+    def particle_size(self):
+        return self._particle_size
+
+    def sim_size(self):
+        return self.particle_size() * self.num_particles()
+
+
+def create_offset_map(particles_list):
     """
     A builder function for the OffsetMap class. Builds an OffsetMap 
     from a simulation json path.
+
+    Args:
+        particles_list (list): A list of dicts, each representing a 
+        particle.
+
+    Returns:
+        OffsetMap: an OffsetMap object whose particles and properties 
+        are those of `particles_list`.
     """
-    sim_json = read_sim_json(sim_json_path)
-    particles_json = sim_json["particles"]
-    particle_names = get_particle_names(particles_json) # Make names unique, etc.
-    prop_names = get_prop_names(particles_json)
+    num_particles = len(particles_list)
+    particle_names = get_particle_names(particles_list) # Make names unique, etc.
+    prop_names = get_prop_names(particles_list)
     # Invert prop, particle lists.
     particle_name_to_idx = list_inverse(particle_names)
     prop_name_to_idx = list_inverse(prop_names)
     # Get sizes and offsets.
-    prop_sizes = get_prop_sizes(particles_json, prop_name_to_idx)
-    prop_offsets, particle_size = get_prop_offsets(prop_sizes)
-    return OffsetMap(particle_name_to_idx, prop_name_to_idx, prop_offsets, particle_size)
+    prop_sizes = get_prop_sizes(particles_list, prop_name_to_idx)
+    prop_offsets, particle_size_without_net_force = get_prop_offsets(prop_sizes)
+    # Add `net-force` property. Update prop_sizes, prop_offsets, 
+    # prop_names and prop_to_idx
+    net_force_idx = len(prop_names)
+    pos_size = get_pos_size(prop_name_to_idx, prop_sizes) 
+    prop_name_to_idx["net-force"] = net_force_idx
+    prop_names.append("net-force")
+    prop_sizes.append(pos_size)
+    prop_offsets.append(particle_size_without_net_force)
+    particle_size = particle_size_without_net_force + pos_size
+    # Sort properties alphabetically (TODO).
+    # Create the offset map.
+    offset_map = OffsetMap(
+            particle_name_to_idx, 
+            prop_name_to_idx, 
+            prop_offsets, 
+            prop_sizes, 
+            num_particles,
+            particle_size)
+    return offset_map
     
+
+def get_pos_size(prop_name_to_idx, prop_sizes) -> int:
+    """
+    Output the size of the `pos` property.
+    """
+    # size of pos?
+    if "pos" not in prop_name_to_idx:
+        raise RuntimeError("particles must have a \"pos\" property")
+    pos_idx = prop_name_to_idx["pos"]
+    return prop_sizes[pos_idx]
+
 
 def read_sim_json(sim_json_path):
     reader = open(sim_json_path, "r")
@@ -97,10 +158,10 @@ def check_prop_size(prop_idx, prop_val, prop_sizes):
         prop_size = len(prop_val)
     # All particles in the same group must have the same sized
     # properties.
-    if prop_idx in prop_sizes:
+    if prop_sizes[prop_idx] != 0:
         if prop_sizes[prop_idx] != prop_size:
             raise ValueError(f"Inconsistent sizes for property"
-                             f"{prop_idx}")
+                             f" {prop_idx}. Previously {prop_sizes[prop_idx]}, now {prop_size}")
     else:
         prop_sizes[prop_idx] = prop_size
 
