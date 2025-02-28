@@ -14,10 +14,18 @@ class OffsetMap:
         self._prop_sizes = prop_sizes
         self._num_particles = num_particles
 
-    def idx_of(self, particle_name, prop_name, index=0):
-        particle_offset = self._particle_size * self._particle_name_to_idx[particle_name]
-        prop_offset = self._prop_offsets[self._prop_name_to_idx[prop_name]]
-        return particle_offset + prop_offset + index
+    def idx_of(self, particle_name=None, prop_name=None, index=0):
+        idx = 0
+        if particle_name is not None:
+            idx += self._particle_size * self._particle_name_to_idx[particle_name]
+        if prop_name is not None:
+            idx += self._prop_offsets[self._prop_name_to_idx[prop_name]]
+        idx += index
+        return idx
+
+    def idx_as_str(self, particle_id="obj", prop_name=None, index=0):
+        idx = self._prop_offsets[self._prop_name_to_idx[prop_name]] + index
+        return f"{idx} + {particle_id} * {self.particle_size()}"    
 
     def prop_offset(self, prop_name) -> int:
         return self._prop_offsets[self._prop_name_to_idx[prop_name]]
@@ -30,14 +38,14 @@ class OffsetMap:
         return [particle_idx * self._particle_size + prop_offset 
                 for particle_idx in range(self.num_particles())]
 
-    def sim_dim(self) -> int:
-        return self.prop_size("pos")
-
     def num_particles(self) -> int:
         return self._num_particles
 
     def particle_size(self):
         return self._particle_size
+
+    def sim_dim(self) -> int:
+        return self.prop_size("pos")
 
     def sim_size(self):
         return self.particle_size() * self.num_particles()
@@ -110,11 +118,19 @@ def get_particle_names(particles):
     # TODO: Come up with a scheme for making particle names unique 
     # while preserving their original names.
     # FOR NOW: Assumes names are unique.
-    particle_names = set()
+    particle_names = {}
+    unique_particle_names = []
     for particle in particles:
         particle_name = particle["name"]
-        particle_names.add(particle_name)
-    return sorted(list(particle_names))
+        if particle_name in particle_names:
+            ct = particle_names[particle_name]
+            particle_name += f"-{ct}"
+            particle_names[particle_name] += 1
+        else:
+            particle_names[particle_name] = 1
+
+        unique_particle_names.append(particle_name)
+    return sorted(unique_particle_names)
 
 
 def list_inverse(l) -> dict:

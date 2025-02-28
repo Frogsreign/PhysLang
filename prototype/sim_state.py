@@ -2,6 +2,7 @@ import numpy
 
 import compile2
 import datalayout
+import parse
 
 # Ignore the long schematic comments.
 
@@ -47,38 +48,16 @@ class SimState:
         force_names = []
         force_funcs = []
         force_outps = []
-        # Define variables and variable name mapper.
-        variables = ["particle_id_1", "particle_id_2", "data"]
-        particle_size = self._offset_map.particle_size()
 
-        def var_to_idx(ast_var_name):
-            seq = ast_var_name.split(".")
-            if len(seq) < 2:
-                raise RuntimeError()
-            prop_name = seq[1]
-            prop_offset = self._offset_map.prop_offset(prop_name)
-            prop_idx = 0
-            if len(seq) > 2: # Should be == 3
-                prop_idx = int(seq[2].split(":")[1])
-            return prop_offset + prop_idx
+        # Define variables and variable name mapper.
+        variables = ["obj1", "obj2", "data"]
 
         def var_converter(ast_var_name):
-            particle_id = None
-            if ast_var_name.startswith("obj1"):
-                particle_id = "particle_id_1"
-            else:
-                particle_id = "particle_id_2"
-            seq = ast_var_name.split(".")
-            if len(seq) < 2:
-                raise RuntimeError()
-            prop_name = seq[1]
-            prop_offset = self._offset_map.prop_offset(prop_name)
-            prop_idx = 0
-            if len(seq) > 2: # Should be == 3
-                prop_idx = int(seq[2].split(":")[1])
-        
-            idx = prop_offset + prop_idx
-            return f"data[{idx} + {particle_id} * {particle_size}]"    
+            particle_name, prop_name, prop_idx = parse.parse_var(ast_var_name)
+            return f"data[{self._offset_map.idx_as_str(
+                    prop_name=prop_name, 
+                    particle_id=particle_name, 
+                    index=prop_idx)}]"
     
         compiler_options = {
             "variables_predefined": True,
@@ -88,20 +67,17 @@ class SimState:
 
         # Compile all forces.
         for force_name, force_entry in forces.items():
-            force_func_tree = force_entry["func"]
-            force_outp = force_entry["out"]
-            force_inp = force_entry["in"]
             # Compile.
             compiler_options["func_name"] = force_name
             force_name, force_func = compile2.compile_tree(
-                    force_func_tree,
+                    force_entry["func"],
                     compiler_options=compiler_options, 
                     variables=variables)
             # Append to lists.
             force_names.append(force_name)
             force_funcs.append(eval(force_func))
-            force_outps.append(var_to_idx(force_outp))
-            print(force_func)
+            _, prop_name, prop_idx = parse.parse_var(force_entry["out"])
+            force_outps.append(self._offset_map.idx_of(prop_name=prop_name, index=prop_idx))
         return force_names, force_outps, force_funcs
 
 
@@ -109,36 +85,16 @@ class SimState:
         update_rule_names = []
         update_rule_funcs = []
         update_rule_outps = []
-        # Define variables and variable name mapper.
-        variables = ["particle_id", "dt", "data"]
-        particle_size = self._offset_map.particle_size()
 
-        def var_to_idx(ast_var_name):
-            seq = ast_var_name.split(".")
-            if len(seq) < 2:
-                raise RuntimeError()
-            prop_name = seq[1]
-            prop_offset = self._offset_map.prop_offset(prop_name)
-            prop_idx = 0
-            if len(seq) > 2: # Should be == 3
-                prop_idx = int(seq[2].split(":")[1])
-            return prop_offset + prop_idx
+        # Define variables and variable name mapper.
+        variables = ["obj", "dt", "data"]
 
         def var_converter(ast_var_name):
             if ast_var_name.startswith("dt"):
                 return "dt"
             else:
-                seq = ast_var_name.split(".")
-                if len(seq) < 2:
-                    raise RuntimeError()
-                prop_name = seq[1]
-                prop_offset = self._offset_map.prop_offset(prop_name)
-                prop_idx = 0
-                if len(seq) > 2: # Should be == 3
-                    prop_idx = int(seq[2].split(":")[1])
-            
-                idx = prop_offset + prop_idx
-                return f"data[{idx} + particle_id * {particle_size}]"    
+                _, prop_name, prop_idx = parse.parse_var(ast_var_name)
+                return f"data[{self._offset_map.idx_as_str(prop_name=prop_name, index=prop_idx)}]"
                     
         compiler_options = {
             "variables_predefined": True,
@@ -148,20 +104,17 @@ class SimState:
         
         # Compile all update_rules.
         for update_rule_name, update_rule_entry in update_rules.items():
-            update_rule_func_tree = update_rule_entry["func"]
-            update_rule_outp = update_rule_entry["out"]
-            update_rule_inp = update_rule_entry["in"]
             # Compile.
             compiler_options["func_name"] = update_rule_name
             update_rule_name, update_rule_func = compile2.compile_tree(
-                    update_rule_func_tree,
+                    update_rule_entry["func"],
                     compiler_options=compiler_options, 
                     variables=variables)
             # Append to lists.
             update_rule_names.append(update_rule_name)
             update_rule_funcs.append(eval(update_rule_func))
-            update_rule_outps.append(var_to_idx(update_rule_outp))
-            print(update_rule_func)
+            _, prop_name, prop_idx = parse.parse_var(update_rule_entry["out"])
+            update_rule_outps.append(self._offset_map.idx_of(prop_name=prop_name, index=prop_idx))
         return update_rule_names, update_rule_outps, update_rule_funcs
 
 
