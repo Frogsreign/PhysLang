@@ -1,34 +1,5 @@
 # imports
 
-
-# Token class
-class Token(object):
-    def __init__(self, type, value):
-        # from the list of token types
-        self.type = type
-        # the value
-        self.value = value
-
-    def __str__(self):
-        # String representation of the token
-        return "Token({type}, {value})".format(type=self.type, value=repr(self.value))
-
-# Scanner class
-class Scanner(object):
-    def __init__(self, text):
-        self.start = 0
-        self.current = 0
-        self.line = 0
-        self.tokens = []
-
-    def scan(self):
-        
-        token = None
-
-
-    
-
-
 # Interpreter class
 class Interpreter(object):
     def __init__(self, text):

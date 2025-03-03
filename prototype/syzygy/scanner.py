@@ -1,5 +1,5 @@
 import interpreter
-import token
+from token import *
 from tokentype import *
 
 # Scanner class
@@ -16,29 +16,38 @@ class Scanner(object):
         # Storage for tokens
         self.tokens = []
 
+        self.reserved = {
+            'point': POINT,
+            'force': FORCE,
+            'update': UPDATE,
+            'solid': SOLID
+        }
+
     def scan(self):
         
         # Loop through the text and get tokens
-        token = None
-        while not self.atEnd() and (token := self.getNextToken()) != None:
-            if token.type != IGNORE: self.tokens.append(token)
-            print(token.toString())
+        toke = None
+        while not self.atEnd() and (toke := self.getNextToken()) != None:
+            if toke.type != IGNORE: self.tokens.append(toke)
+            print(toke.toString())
 
         # End with EOF
-        self.tokens.append(token(EOF, None, self.line))
+        self.tokens.append(Token(EOF, None, self.line))
 
     # Interface for token scanning
     def getNextToken(self):
         token = None
 
-        token = getSingleCharacterToken(self)
-        if token == None: token = getComparisonToken()
-        if token == None: token = getStringToken()
-        if token == None: token = getNumericToken()
-        if token == None: token = getReservedToken()
+        token = self.getSingleCharacterToken()
+        if token == None: token = self.getComparisonToken()
+        if token == None: token = self.getStringToken()
+        if token == None: token = self.getNumericToken()
+        if token == None: token = self.getReservedToken()
         if token == None: 
             character = self.source[self.current]
-            raise Exception("Unexpected character {character} at position {self.current}.")
+            raise Exception(f"Unexpected character {character} at position {self.current}.")
+        
+        return token
 
     # Token parsing functions
     def getSingleCharacterToken(self):
@@ -71,11 +80,105 @@ class Scanner(object):
         # Valid token
         if type != UNDEFINED:
             self.current += 1
-            return token(type, nextChar, self.line)
+            return Token(type, nextChar, self.line)
         else: return None
 
+    def getComparisonToken(self):
+        nextChar = self.source[self.current]
+
+        type = UNDEFINED
+        if nextChar == '!':
+            if self.checkForChar('='): type = NOT_EQUAL
+            else: type = NOT
+        elif nextChar == '=':
+            if self.checkForChar('='): type = EQUIVALENT
+            else: type = ASSIGN
+        elif nextChar == '<':
+            if self.checkForChar('='): type = LESS_OR_EQUAL
+            else: type = LESS_THAN
+        elif nextChar == '>':
+            if self.checkForChar('='): type = GREATER_OR_EQUAL
+            else: type = GREATER_THAN
+
+        if type != UNDEFINED:
+            if self.checkForChar('='):
+                self.current += 2
+                return Token(type, self.source[self.current-2:self.current], self.line)
+            else:
+                self.current += 1
+                return Token(type, nextChar, self.line)
+        else: return None
+
+    def getNumericToken(self):
+        nextChar = self.source[self.current]
+        type = UNDEFINED
+        
+        if nextChar.isdigit():
+            start = self.current
+            periodFound = False
+            while nextChar.isdigit() or nextChar == '.':
+                if nextChar == '.' and periodFound:
+                    raise Exception('Invalid number with two periods (\'.\').')
+                elif nextChar == '.':
+                    periodFound = True
+
+                self.current += 1
+                if (self.atEnd()): break
+
+                nextChar = self.source[self.current]
+            
+            numberText = self.source[start:self.current]
+            numberValue = float(numberText)
+            return Token(NUMBER, numberText, self.line, numberValue)
+        
+        return None
+
+    def getStringToken(self):
+        nextChar = self.source[self.current]
+        type = UNDEFINED
+        
+        if nextChar == '"':
+            start = self.current
+            while not self.atEnd():
+                self.current += 1
+                if self.atEnd() or self.source[self.current] == '\n':
+                    self.current = start
+                    raise Exception(f'String starting at position {start} on line {self.line} did not end before new line. Multi-line strings are not supported.')
+                
+                if self.source[self.current] == '"':
+                    text = self.source[start+1:self.current]
+                    self.current += 1
+                    return Token(STRING, text, self.line, text)
+                
+            raise Exception(f'String starting at position {start} on line {self.line} terminate.')
+
+        else: return None    
+
+    def getReservedToken(self):
+        nextChar = self.source[self.current]
+        type = UNDEFINED
+        
+        if nextChar.isalpha():
+            start = self.current
+            while nextChar.isalpha():
+                self.current += 1
+                if (self.atEnd()): break
+
+                nextChar = self.source[self.current]
+
+            word = self.source[start:self.current]
+
+            if word in self.reserved: return Token(self.reserved[word], word, self.line, word)
+            else: return Token(IDENTIFIER, word, self.line, word)
+
+        return None
 
     # Helper functions
     def atEnd(self):
-        return self.current > len(self.source)
+        return self.current >= len(self.source)
+    
+    def checkForChar(self, expectedChar):
+        if self.current >= len(self.source) - 1: return False
+        return self.source[self.current + 1] == expectedChar
+
 
