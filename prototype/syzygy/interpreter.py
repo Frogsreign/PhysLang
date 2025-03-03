@@ -1,15 +1,5 @@
 # imports
 
-# List of token types
-# Value types
-NUMBER, STRING = 'NUMBER', 'STRING' 
-
-# Structure symbols
-LEFT_PAREN, RIGHT_PAREN, LEFT_BRACK, RIGHT_BRACK = 'LEFT_PAREN', 'RIGHT_PAREN', 'LEFT_BRACK', 'LEFT_BRACK'
-COMMA, EOL, EOF = 'COMMA', 'EOL', 'EOF'
-
-# Reserved words
-POINT, SOLID, FORCE = 'POINT', 'SOLID', 'FORCE'
 
 # Token class
 class Token(object):
@@ -29,6 +19,12 @@ class Scanner(object):
         self.start = 0
         self.current = 0
         self.line = 0
+        self.tokens = []
+
+    def scan(self):
+        
+        token = None
+
 
     
 
