@@ -28,8 +28,8 @@ def decode_particle(obj: dict):
         particle.set(prop_name, prop_val)
     return particle
 
-def create_solar_system():
-    planets_json_file = open("data/coulomb.json", "r")
+def create_solar_system(filename):
+    planets_json_file = open(filename, "r")
     objs = json.JSONDecoder().decode(planets_json_file.read())
     planets_json_file.close()
     return [decode_particle(obj) for obj in objs]

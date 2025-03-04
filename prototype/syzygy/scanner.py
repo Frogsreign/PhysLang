@@ -1,5 +1,5 @@
 import interpreter
-from token import *
+from tokens import *
 from tokentype import *
 
 # Scanner class
@@ -74,6 +74,7 @@ class Scanner(object):
         elif nextChar == '+': type = PLUS
         elif nextChar == '*': type = MULTIPLY
         elif nextChar == '/': type = DIVIDE
+        elif nextChar == '^': type = EXPONENT
         elif nextChar == ';': type = SEMICOLON
         elif nextChar == '&': type = AND
         elif nextChar == '|': type = OR

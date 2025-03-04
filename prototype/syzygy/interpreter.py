@@ -1,5 +1,5 @@
 # imports
-from token import *
+from tokens import *
 from tokentype import *
 from statement import *
 from expression import *
@@ -11,6 +11,7 @@ class Interpreter(object):
     def __init__(self, statements):
       self.statements = statements
       self.dictionary = {}
+      self.dicts = []
       self.pointCount = 0
 
     def run(self):
@@ -24,7 +25,6 @@ class Interpreter(object):
         else: pass
 
     def interpretExpression(self, expression):
-
         if isinstance(expression, CommaExpression): return self.interpretComma(expression)
         elif isinstance(expression, BinaryExpression): return self.interpretBinary(expression)
         elif isinstance(expression, UnaryExpression): return self.interpretUnary(expression)
@@ -43,10 +43,19 @@ class Interpreter(object):
         m = self.interpretExpression(statement.m)
         e = self.interpretExpression(statement.e)
 
+        if pos is None: pos = [0, 0, 0]
+        if vel is None: vel = [0, 0, 0]
+        if acc is None: acc = [0, 0, 0]
+        if m is None: m = np.inf
+        if e is None: e = 0
+
         # Set up the net force property (this isn't provided by the user but we'll need it for the animation)
         net_force = 0
         if np.shape(pos) != ():
-            net_force = np.zeros_like(pos)
+            net_force = list(np.zeros_like(pos))
+
+        if np.shape(pos) != np.shape(vel) or np.shape(pos) != np.shape(acc) or np.shape(vel) != np.shape(acc):
+            raise Exception("Dimensions of position, velocity, and acceleration must be the same.")
 
         # Create the property dictionary
         properties = {
@@ -60,30 +69,50 @@ class Interpreter(object):
 
         # Create the dictionary for the point
         pointDict = {
-            "Name": self.pointCount, 
-            "Props": properties
+            "name": self.pointCount, 
+            "properties": properties
         }
 
+        self.dictionary.update({self.pointCount: pointDict})
+        self.pointCount += 1
+        self.dicts.append(pointDict)
         print(pointDict)
 
-    def interpretComma(self, expression):
-        pass
-
     def interpretBinary(self, expression):
-        pass
+        left = self.interpretExpression(expression.left)
+        right = self.interpretExpression(expression.right)
+        operator = expression.operator.type
+
+        # validate?
+
+        # also, comparisons would go here if those get added in
+
+        if operator == PLUS: return left + right
+        elif operator == MINUS: return left - right
+        elif operator == MULTIPLY: return left * right
+        elif operator == DIVIDE: return left / right
+        elif operator == EXPONENT: return left**right
+
+        return None
 
     def interpretUnary(self, expression):
-        pass
+        right = self.interpretExpression(expression.right)
+        operator = expression.operator.type
+
+        return -float(right)
 
     def interpretLiteral(self, expression):
-        return expression.literal
+        return expression.value
 
     def interpretParentheses(self, expression):
         return self.interpret(expression.expression)
 
-    # Needs to return a numpy array
+    # These two should always appear together and the result needs to return a numpy array
+    def interpretComma(self, expression):
+        return list(np.insert(self.interpretExpression(expression.right), 0, self.interpretExpression(expression.left)))
+
     def interpretBracket(self, expression):
-        pass
+        return self.interpretExpression(expression.expression)
 
 
     # Helper functions

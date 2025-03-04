@@ -1,5 +1,4 @@
-import interpreter
-from token import *
+from tokens import *
 from tokentype import *
 from statement import *
 from expression import *
@@ -77,6 +76,7 @@ class Parser(object):
         while self.match(COMMA):
             right = self.term()
             expression = CommaExpression(expression, right)
+            print(expression.toString())
         return expression
 
     # Handles addition and subtraction terms
@@ -91,7 +91,7 @@ class Parser(object):
     # Handles multiplication and division terms
     def factor(self):
         expression = self.unary()
-        while self.match(DIVIDE) or self.match(MULTIPLY):
+        while self.match(DIVIDE) or self.match(MULTIPLY) or self.match(EXPONENT):
             operator = self.previous()
             right = self.unary()
             expression = BinaryExpression(expression, operator, right)
