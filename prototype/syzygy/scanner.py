@@ -22,7 +22,11 @@ class Scanner(object):
             'update': UPDATE,
             'solid': SOLID,
             'pos': POS,
-            'var': VAR
+            'var': VAR,
+            'vel': VEL,
+            'acc': ACC,
+            'm': M,
+            'e': E
         }
 
     def scan(self):
