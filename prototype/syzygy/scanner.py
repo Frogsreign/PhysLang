@@ -46,6 +46,7 @@ class Scanner(object):
         token = None
 
         token = self.getSingleCharacterToken()
+        if token == None: token = self.getPeriodToken()
         if token == None: token = self.getComparisonToken()
         if token == None: token = self.getStringToken()
         if token == None: token = self.getNumericToken()
@@ -91,6 +92,21 @@ class Scanner(object):
             return Token(type, nextChar, self.line)
         else: return None
 
+    def getPeriodToken(self):
+        nextChar = self.source[self.current]
+        type = UNDEFINED
+        if nextChar == '.':
+            if self.current == 0: return None # start of document, this must be a number
+            if self.current + 1 >= len(self.source): raise Exception("Unexpected '.'.") # end of document, this is rogue
+            if self.source[self.current + 1].isdigit() or self.source[self.current - 1].isdigit(): return None # this is actually a number
+            if not self.source[self.current + 1].isalpha(): raise Exception("Unexpected '.'.") # rogue period
+
+            # Ok we made it through all the filters. We know we have something like X.X, so we can call this a PERIOD
+            self.current += 1
+            type = PERIOD
+            return Token(PERIOD, ".", self.line)
+
+
     def getComparisonToken(self):
         nextChar = self.source[self.current]
 
@@ -121,15 +137,33 @@ class Scanner(object):
         nextChar = self.source[self.current]
         type = UNDEFINED
         
-        if nextChar.isdigit():
+        # messy logic for handling periods and exponential notation
+        if nextChar.isdigit() or nextChar == ".":
             start = self.current
-            periodFound = False
-            while nextChar.isdigit() or nextChar == '.':
+            periodFound = (nextChar == ".")
+            eFound = False
+            if periodFound and self.current + 1 < len(self.source):
+                self.current += 1
+                nextChar = self.source[self.current]
+            elif periodFound:
+                raise Exception("Solitary '.' unexpected.")
+            while nextChar.isdigit() or nextChar == '.' or nextChar == 'e':
                 if nextChar == '.' and periodFound:
-                    raise Exception('Invalid number with two periods (\'.\').')
+                    raise Exception("Invalid number with two periods ('.').")
                 elif nextChar == '.':
                     periodFound = True
 
+                if nextChar == "e" and eFound:
+                    raise Exception("Multiple 'e's not permitted in number.")
+                elif nextChar == "e":
+                    eFound = True
+                    dashFound = False
+                    if self.current + 1 < len(self.source) and dashFound == False:
+                        if self.source[self.current + 1] == "-": 
+                            self.current += 1 # increase past the - if we have the right character
+                            dashFound = True
+                        
+                            
                 self.current += 1
                 if (self.atEnd()): break
 
@@ -178,6 +212,11 @@ class Scanner(object):
 
             if word in self.reserved: return Token(self.reserved[word], word, self.line, word)
             else: return Token(IDENTIFIER, word, self.line, word)
+
+        if nextChar == ".":
+            self.current += 1
+            if (self.atEnd()): raise Exception("Unexpected '.' without accessed property in identifier.")
+            
 
         return None
 

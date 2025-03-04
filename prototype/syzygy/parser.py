@@ -27,40 +27,79 @@ class Parser(object):
 
     def statement(self):
         if self.match(POINT): return self.pointStatement()
+        elif self.match(FORCE): return self.forceStatement()
         else: # Catch bad format
             raise Exception("Unexpected command.")
         # elif self.match(FORCE): return self.forceStatement()
         # elif self.match(UPDATE): return self.updateStatement()
 
     def pointStatement(self):
+        # point(pos=X, vel=X, acc=X, m=X, e=X, name=X)
+
         # Attributes of points that can receive expressions
         pos = None
         vel = None
         acc = None
         m = None
         e = None
+        name = None
 
-        self.consume(LEFT_PAREN, 'Expected \'(\' after \'point\'.')
-        self.consume(POS, 'Expected \'pos=\' as first argument of point.')
-        self.consume(ASSIGN, 'Expected \'pos=\' as first argument of point.')
+        self.consume(LEFT_PAREN, "Expected '(' after 'point'.")
+        self.consume(POS, "Expected 'pos=' as first argument of point.")
+        self.consume(ASSIGN, "Expected 'pos=' as first argument of point.")
         pos = self.expression()
         while self.match(COMMA):
             if self.match(E):
-                self.consume(ASSIGN, 'Expected \'=\' for parameter assignment.')
+                self.consume(ASSIGN, "Expected '=' for parameter assignment.")
                 e = self.expression()
             elif self.match(M):
-                self.consume(ASSIGN, 'Expected \'=\' for parameter assignment.')
+                self.consume(ASSIGN,  "Expected '=' for parameter assignment.")
                 m = self.expression()
             elif self.match(VEL):
-                self.consume(ASSIGN, 'Expected \'=\' for parameter assignment.')
+                self.consume(ASSIGN, "Expected '=' for parameter assignment.")
                 vel = self.expression()
             elif self.match(ACC):
-                self.consume(ASSIGN, 'Expected \'=\' for parameter assignment.')
+                self.consume(ASSIGN, "Expected '=' for parameter assignment.")
                 acc = self.expression()
+            elif self.match(NAME):
+                self.consume(ASSIGN, "Expected '=' for parameter assignment.")
+                name = self.expression()
             else: raise Exception('Unexpected parameter for point.')
                 
-        self.consume(RIGHT_PAREN, 'Expected \')\' to close point(pos=).')
+        self.consume(RIGHT_PAREN, "Expected ')' to close point(pos=).")
         return PointStatement(pos, vel=vel, acc=acc, m=m, e=e)
+
+    def forceStatement(self):
+        # force(a, b, func=a.x + b.x)
+
+        # Attributes
+        objA = None
+        objB = None
+        func = None
+
+        self.consume(LEFT_PAREN, "Expected '(' after 'point'.")
+        # Get the first identifier
+        objA = self.expression()
+
+        # If it isn't a variable, get upset
+        if not isinstance(objA, VariableExpression): raise Exception("Identifier not provided for force.")
+        
+        # Then we should find a comma leading us to the second identifier
+        if self.match(COMMA):
+            objB = self.expression()
+            if not isinstance(objB, VariableExpression): raise Exception("Identifier not provided for force.")
+        else: raise Exception("Insufficient arguments for force. 1 provided, 3 required.")
+
+        # And finally a second comma leading to the function
+        if self.match(COMMA):
+            func = self.expression()
+
+        # Optional arguments for defining constants
+        # This seems hard.
+
+        self.consume(RIGHT_PAREN, "Expected ')' to close point(pos=).")
+        return ForceStatement(objA, objB, func)
+        
 
     # Expression management functions
     # Check for commas, terms, factors, unaries, primaries (bracket expressions mostly), and numbers/strings, in this order
@@ -76,7 +115,17 @@ class Parser(object):
         while self.match(COMMA):
             right = self.term()
             expression = CommaExpression(expression, right)
-            print(expression.toString())
+        return expression
+    
+    def period(self):
+        expression = self.term()
+        if isinstance(expression, VariableExpression):
+            if self.match(PERIOD):
+                child = self.term()
+                if isinstance(child, (POS, VEL, ACC, M, E)):
+                    expression = PeriodExpression(expression, child)
+                    print(expression.toString())
+                else: raise Exception("Non-attribute after text period.")
         return expression
 
     # Handles addition and subtraction terms
@@ -109,8 +158,10 @@ class Parser(object):
     # Basic units (numbers, parentheses, etc.)
     def primary(self):
         
-        # if self.match(IDENTIFIER) -> would need variable expression handling
         # if self.match(TRUE/FALSE/NONE) -> would just be literals
+
+        if self.match(IDENTIFIER):
+            return VariableExpression(self.previous())
 
         if self.match(NUMBER) or self.match(STRING):
             print(self.previous().literal)

@@ -55,7 +55,7 @@ class ForceStatement(Statement):
         self.func = func
 
     def toString(self):
-        return f"ObjA: {self.objA} ObjB: {self.objB} Func: {self.func}"
+        return f"ObjA: {self.objA.toString()} ObjB: {self.objB.toString()} Func: {self.func.toString()}"
 
 class UpdateStatement(Statement):
     # Not sure what to expect right now

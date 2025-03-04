@@ -8,6 +8,21 @@ class CommaExpression(Expression):
     
     def toString(self):
         return self.left.toString() + ', ' + self.right.toString()
+    
+class PeriodExpression(Expression):
+    def __init__(self, parent, child):
+        self.parent = parent
+        self.child = child
+
+    def toString(self):
+        return self.parent.toString() + "." + self.child.toString()
+    
+class VariableExpression(Expression):
+    def __init__(self, var):
+        self.var = var
+
+    def toString(self):
+        return self.var.text
 
 class BinaryExpression(Expression):
     def __init__(self, left, operator, right):
