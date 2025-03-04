@@ -21,6 +21,7 @@ class Interpreter(object):
     def interpretStatement(self, statement):
 
         if isinstance(statement, PointStatement): self.interpretPoint(statement)
+        elif isinstance(statement, ForceStatement): self.interpretForce(statement)
         # more branches for different types of statments
         else: pass
 
@@ -77,6 +78,16 @@ class Interpreter(object):
         self.pointCount += 1
         self.dicts.append(pointDict)
         print(pointDict)
+
+    def interpretForce(self, statement):
+
+        objA = self.interpretExpression(statement.objA)
+        objB = self.interpretExpression(statement.objB)
+        func = self.interpretExpression(statement.func)
+
+        
+
+
 
     def interpretBinary(self, expression):
         left = self.interpretExpression(expression.left)

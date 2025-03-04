@@ -97,7 +97,7 @@ class Parser(object):
         # Optional arguments for defining constants
         # This seems hard.
 
-        self.consume(RIGHT_PAREN, "Expected ')' to close point(pos=).")
+        self.consume(RIGHT_PAREN, "Expected ')' to close force().")
         return ForceStatement(objA, objB, func)
         
 
