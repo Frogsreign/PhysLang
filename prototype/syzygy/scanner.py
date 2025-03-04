@@ -20,7 +20,9 @@ class Scanner(object):
             'point': POINT,
             'force': FORCE,
             'update': UPDATE,
-            'solid': SOLID
+            'solid': SOLID,
+            'pos': POS,
+            'var': VAR
         }
 
     def scan(self):
@@ -29,10 +31,11 @@ class Scanner(object):
         toke = None
         while not self.atEnd() and (toke := self.getNextToken()) != None:
             if toke.type != IGNORE: self.tokens.append(toke)
-            print(toke.toString())
 
         # End with EOF
         self.tokens.append(Token(EOF, None, self.line))
+
+        return self.tokens
 
     # Interface for token scanning
     def getNextToken(self):
