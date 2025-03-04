@@ -1,106 +1,96 @@
 # imports
+from token import *
+from tokentype import *
+from statement import *
+from expression import *
+from parser import *
+import numpy as np
 
 # Interpreter class
 class Interpreter(object):
-    def __init__(self, text):
-        # Text of the file to be parsed and interpreted
-        self.text = text
+    def __init__(self, statements):
+      self.statements = statements
+      self.dictionary = {}
+      self.pointCount = 0
 
-        # Starting position in the file
-        self.pos = 0
+    def run(self):
+        for statement in self.statements:
+            self.interpretStatement(statement)
 
-        # Current token
-        self.current_token = None
+    def interpretStatement(self, statement):
 
-    # Generic error
-    def error(self):
-        raise Exception('Error parsing input')
+        if isinstance(statement, PointStatement): self.interpretPoint(statement)
+        # more branches for different types of statments
+        else: pass
 
-    def get_next_token(self):
-        """Lexical analyzer (also known as scanner or tokenizer)
+    def interpretExpression(self, expression):
 
-        This method is responsible for breaking a sentence
-        apart into tokens. One token at a time.
-        """
-        text = self.text
+        if isinstance(expression, CommaExpression): return self.interpretComma(expression)
+        elif isinstance(expression, BinaryExpression): return self.interpretBinary(expression)
+        elif isinstance(expression, UnaryExpression): return self.interpretUnary(expression)
+        elif isinstance(expression, LiteralExpression): return self.interpretLiteral(expression)
+        elif isinstance(expression, ParenthesesExpression): return self.interpretParentheses(expression)
+        elif isinstance(expression, BracketExpression): return self.interpretBracket(expression)
+        else: return None
 
-        # is self.pos index past the end of the self.text ?
-        # if so, then return EOF token because there is no more
-        # input left to convert into tokens
-        if self.pos > len(text) - 1:
-            return Token(EOF, None)
+    # Creates a JSON entry for a singular point statement
+    def interpretPoint(self, statement):
 
-        # get a character at the position self.pos and decide
-        # what token to create based on the single character
-        current_char = text[self.pos]
+        # Interpret the individual params
+        pos = self.interpretExpression(statement.pos)
+        vel = self.interpretExpression(statement.vel)
+        acc = self.interpretExpression(statement.acc)
+        m = self.interpretExpression(statement.m)
+        e = self.interpretExpression(statement.e)
 
-        # if the character is a digit then convert it to
-        # integer, create an INTEGER token, increment self.pos
-        # index to point to the next character after the digit,
-        # and return the INTEGER token
-        if current_char.isdigit():
-            token = Token(NUMBER, int(current_char))
-            self.pos += 1
-            return token
+        # Set up the net force property (this isn't provided by the user but we'll need it for the animation)
+        net_force = 0
+        if np.shape(pos) != ():
+            net_force = np.zeros_like(pos)
 
-        if current_char == '+':
-            token = Token(PLUS, current_char)
-            self.pos += 1
-            return token
+        # Create the property dictionary
+        properties = {
+            "net-force": net_force,
+            "pos": pos,
+            "mass": m,
+            "vel": vel,
+            "acc": acc,
+            "e_charge": e
+        }
 
-        self.error()
+        # Create the dictionary for the point
+        pointDict = {
+            "Name": self.pointCount, 
+            "Props": properties
+        }
 
-    def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
-        if self.current_token.type == token_type:
-            self.current_token = self.get_next_token()
-        else:
-            self.error()
+        print(pointDict)
 
-    def expr(self):
-        """expr -> INTEGER PLUS INTEGER"""
-        # set current token to the first token taken from the input
-        self.current_token = self.get_next_token()
+    def interpretComma(self, expression):
+        pass
 
-        # we expect the current token to be a single-digit integer
-        left = self.current_token
-        self.eat(INTEGER)
+    def interpretBinary(self, expression):
+        pass
 
-        # we expect the current token to be a '+' token
-        op = self.current_token
-        self.eat(PLUS)
+    def interpretUnary(self, expression):
+        pass
 
-        # we expect the current token to be a single-digit integer
-        right = self.current_token
-        self.eat(INTEGER)
-        # after the above call the self.current_token is set to
-        # EOF token
+    def interpretLiteral(self, expression):
+        return expression.literal
 
-        # at this point INTEGER PLUS INTEGER sequence of tokens
-        # has been successfully found and the method can just
-        # return the result of adding two integers, thus
-        # effectively interpreting client input
-        result = left.value + right.value
-        return result
+    def interpretParentheses(self, expression):
+        return self.interpret(expression.expression)
+
+    # Needs to return a numpy array
+    def interpretBracket(self, expression):
+        pass
 
 
-def main():
-    while True:
-        try:
-            # To run under Python3 replace 'raw_input' call
-            # with 'input'
-            text = input('calc> ')
-        except EOFError:
-            break
-        if not text:
-            continue
-        interpreter = Interpreter(text)
-        result = interpreter.expr()
-        print(result)
+    # Helper functions
+    # validateOperands -> currently the program throws errors with i.e. 5 + try, since the parser is
+    # not built for it. Would need to add something like this if I upgrade the parser.
 
 
-if __name__ == '__main__':
-    main()
+
+    
+

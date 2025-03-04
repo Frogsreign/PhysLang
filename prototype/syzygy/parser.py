@@ -28,6 +28,8 @@ class Parser(object):
 
     def statement(self):
         if self.match(POINT): return self.pointStatement()
+        else: # Catch bad format
+            raise Exception("Unexpected command.")
         # elif self.match(FORCE): return self.forceStatement()
         # elif self.match(UPDATE): return self.updateStatement()
 
@@ -44,7 +46,6 @@ class Parser(object):
         self.consume(ASSIGN, 'Expected \'pos=\' as first argument of point.')
         pos = self.expression()
         while self.match(COMMA):
-            print('Comma matched.')
             if self.match(E):
                 self.consume(ASSIGN, 'Expected \'=\' for parameter assignment.')
                 e = self.expression()
@@ -63,11 +64,22 @@ class Parser(object):
         return PointStatement(pos, vel=vel, acc=acc, m=m, e=e)
 
     # Expression management functions
-    # Check for terms, factors, unaries, primaries (bracket expressions mostly), and numbers/strings, in this order
+    # Check for commas, terms, factors, unaries, primaries (bracket expressions mostly), and numbers/strings, in this order
 
-    def expression(self):
+    # Base tree; has an indicator (bracket) for if working with parameters
+    def expression(self, bracket=False):
+        if bracket: return self.comma()
         return self.term()
+    
+    # Handles comma separated parameters/vector components
+    def comma(self):
+        expression = self.term()
+        while self.match(COMMA):
+            right = self.term()
+            expression = CommaExpression(expression, right)
+        return expression
 
+    # Handles addition and subtraction terms
     def term(self):
         expression = self.factor() # next down the chain
         while self.match(MINUS) or self.match(PLUS):
@@ -76,8 +88,9 @@ class Parser(object):
             expression = BinaryExpression(expression, operator, right)
         return expression
 
+    # Handles multiplication and division terms
     def factor(self):
-        expression = self.primary()
+        expression = self.unary()
         while self.match(DIVIDE) or self.match(MULTIPLY):
             operator = self.previous()
             right = self.unary()
@@ -85,6 +98,7 @@ class Parser(object):
 
         return expression
     
+    # Just for negative numbers
     def unary(self):
         if self.match(MINUS):
             operator = self.previous()
@@ -92,8 +106,12 @@ class Parser(object):
             return UnaryExpression(operator, right)
         return self.primary()
     
+    # Basic units (numbers, parentheses, etc.)
     def primary(self):
         
+        # if self.match(IDENTIFIER) -> would need variable expression handling
+        # if self.match(TRUE/FALSE/NONE) -> would just be literals
+
         if self.match(NUMBER) or self.match(STRING):
             print(self.previous().literal)
             return LiteralExpression(self.previous().literal)
@@ -104,7 +122,7 @@ class Parser(object):
             return ParenthesesExpression(expression)
         
         if self.match(LEFT_BRACK):
-            expression = self.expression()
+            expression = self.expression(True)
             self.consume(RIGHT_BRACK, 'Expected \']\' to close expression.')
             return BracketExpression(expression)
         

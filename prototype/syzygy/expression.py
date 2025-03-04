@@ -1,6 +1,14 @@
 class Expression(object):
     pass
 
+class CommaExpression(Expression):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+    
+    def toString(self):
+        return self.left.toString() + ', ' + self.right.toString()
+
 class BinaryExpression(Expression):
     def __init__(self, left, operator, right):
         self.left = left
@@ -8,7 +16,7 @@ class BinaryExpression(Expression):
         self.right = right
     
     def toString(self):
-        return self.left.toString() + self.operator.toString() + self.right.toString()
+        return self.left.toString() + self.operator.type + self.right.toString()
 
 class UnaryExpression(Expression):
     def __init__(self, operator, right):
@@ -16,14 +24,14 @@ class UnaryExpression(Expression):
         self.right = right
     
     def toString(self):
-        return self.operator.toString() + self.right.toString()
+        return self.operator.type + self.right.toString()
 
 class LiteralExpression(Expression):
     def __init__(self, value):
         self.value = value
     
     def toString(self):
-        return self.value
+        return str(self.value)
 
 class ParenthesesExpression(Expression):
     def __init__(self, expression):

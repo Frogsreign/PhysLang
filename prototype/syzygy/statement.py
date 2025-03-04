@@ -47,8 +47,6 @@ class PointStatement(Statement):
         else:
             return f"Pos: {self.pos.toString()} Vel: None Acc: None M: None, E: None"
 
-
-
 class ForceStatement(Statement):
     # Expects two object expressions (particles, particle groups) and a function expression
     def __init__(self, objA, objB, func):
