@@ -1,7 +1,11 @@
 import numpy
 import time
 
+<<<<<<< HEAD
 import datalayout
+=======
+import data_layout
+>>>>>>> 7d3699f (Breaks up long functions/long-winded logic, and revises compile2's subtraction and division opcodes.)
 import func_handler
 
 # Ignore the long schematic comments.
@@ -12,7 +16,11 @@ import func_handler
 
 class SimState:
     def __init__(self, particles: list, forces: list, update_rules: list):
+<<<<<<< HEAD
         self.data_layout = datalayout.create_data_layout(particles)
+=======
+        self.data_layout = data_layout.create_data_layout(particles)
+>>>>>>> 7d3699f (Breaks up long functions/long-winded logic, and revises compile2's subtraction and division opcodes.)
         self._data = numpy.zeros(self.data_layout.sim_size(), 
                                  dtype=numpy.float64)
         self._fresh_data = self._data.copy()
