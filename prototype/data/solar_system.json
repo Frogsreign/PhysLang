@@ -13,43 +13,28 @@
             "*",
             "obj1.mass",
             [
-              "*",
+              "/",
               "obj2.mass",
               [
-                "/",
+                "^",
                 [
                   "^",
                   [
-                    "^",
+                    "+",
+                    ["^", ["-", "obj2.pos.idx:0", "obj1.pos.idx:0"], 2],
                     [
                       "+",
-                      [
-                        "^",
-                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
-                        2
-                      ],
-                      [
-                        "+",
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
-                          2
-                        ],
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
-                          2
-                        ]
-                      ]
-                    ],
-                    0.5
+                      ["^", ["-", "obj2.pos.idx:1", "obj1.pos.idx:1"], 2],
+                      ["^", ["-", "obj2.pos.idx:2", "obj1.pos.idx:2"], 2]
+                    ]
                   ],
-                  3
-                ]
+                  0.5
+                ],
+                3
               ]
             ]
           ],
-          ["+", ["-", "obj1.pos.idx:0"], "obj2.pos.idx:0"]
+          ["-", "obj2.pos.idx:0", "obj1.pos.idx:0"]
         ]
       ]
     },
@@ -65,43 +50,28 @@
             "*",
             "obj1.mass",
             [
-              "*",
+              "/",
               "obj2.mass",
               [
-                "/",
+                "^",
                 [
                   "^",
                   [
-                    "^",
+                    "+",
+                    ["^", ["-", "obj2.pos.idx:0", "obj1.pos.idx:0"], 2],
                     [
                       "+",
-                      [
-                        "^",
-                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
-                        2
-                      ],
-                      [
-                        "+",
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
-                          2
-                        ],
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
-                          2
-                        ]
-                      ]
-                    ],
-                    0.5
+                      ["^", ["-", "obj2.pos.idx:1", "obj1.pos.idx:1"], 2],
+                      ["^", ["-", "obj2.pos.idx:2", "obj1.pos.idx:2"], 2]
+                    ]
                   ],
-                  3
-                ]
+                  0.5
+                ],
+                3
               ]
             ]
           ],
-          ["+", ["-", "obj1.pos.idx:1"], "obj2.pos.idx:1"]
+          ["-", "obj2.pos.idx:1", "obj1.pos.idx:1"]
         ]
       ]
     },
@@ -117,43 +87,28 @@
             "*",
             "obj1.mass",
             [
-              "*",
+              "/",
               "obj2.mass",
               [
-                "/",
+                "^",
                 [
                   "^",
                   [
-                    "^",
+                    "+",
+                    ["^", ["-", "obj2.pos.idx:0", "obj1.pos.idx:0"], 2],
                     [
                       "+",
-                      [
-                        "^",
-                        ["+", "obj1.pos.idx:0", ["-", "obj2.pos.idx:0"]],
-                        2
-                      ],
-                      [
-                        "+",
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:1", ["-", "obj2.pos.idx:1"]],
-                          2
-                        ],
-                        [
-                          "^",
-                          ["+", "obj1.pos.idx:2", ["-", "obj2.pos.idx:2"]],
-                          2
-                        ]
-                      ]
-                    ],
-                    0.5
+                      ["^", ["-", "obj2.pos.idx:1", "obj1.pos.idx:1"], 2],
+                      ["^", ["-", "obj2.pos.idx:2", "obj1.pos.idx:2"], 2]
+                    ]
                   ],
-                  3
-                ]
+                  0.5
+                ],
+                3
               ]
             ]
           ],
-          ["+", ["-", "obj1.pos.idx:2"], "obj2.pos.idx:2"]
+          ["-", "obj2.pos.idx:2", "obj1.pos.idx:2"]
         ]
       ]
     }
@@ -192,17 +147,17 @@
     "acc-update-x": {
       "in": ["obj.mass"],
       "out": "obj.acc.idx:0",
-      "func": ["*", "obj.net-force.idx:0", ["/", "obj.mass"]]
+      "func": ["/", "obj.net-force.idx:0", "obj.mass"]
     },
     "acc-update-y": {
       "in": ["obj.mass"],
       "out": "obj.acc.idx:1",
-      "func": ["*", "obj.net-force.idx:1", ["/", "obj.mass"]]
+      "func": ["/", "obj.net-force.idx:1", "obj.mass"]
     },
     "acc-update-z": {
       "in": ["obj.mass"],
       "out": "obj.acc.idx:2",
-      "func": ["*", "obj.net-force.idx:2", ["/", "obj.mass"]]
+      "func": ["/", "obj.net-force.idx:2", "obj.mass"]
     }
   },
   "particles": [

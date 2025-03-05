@@ -52,12 +52,12 @@ class Simulation:
 
     def create_animation(self):
         # Initialize point objects.
-        num_points = self._state._offset_map.num_particles()
+        num_points = self._state.data_layout.num_particles()
         points = [self._ax.plot([], [], [], 'o', markersize=8)[0] for _ in range(num_points)]
 
         # Function to update the animation
         def update(frame):
-            self._state._step(self._dt / self._steps_per_update, frame, 
+            self._state.step(self._dt / self._steps_per_update, frame, 
                               steps=self._steps_per_update)
             for i, data in enumerate(self._state.positions()):
                 points[i].set_data_3d(np.expand_dims(data, axis=1))

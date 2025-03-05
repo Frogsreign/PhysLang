@@ -19,20 +19,20 @@
   },
   "/": {
     "res_type": 0,
-    "num_args": 1,
+    "num_args": 2,
     "associative": 0,
     "format": {
-      "py": "(1 / %0)",
-      "c": "(1 / %0)"
+      "py": "(%0 / %1)",
+      "c": "(%0 / %1)"
     }
   },
   "-": {
     "res_type": 0,
-    "num_args": 1,
+    "num_args": 2,
     "associative": 0,
     "format": {
-      "py": "(- %0)",
-      "c": "(- %0)"
+      "py": "(%0 - %1)",
+      "c": "(%0 - %1)"
     }
   },
   "?": {

@@ -12,10 +12,12 @@ import string
 # Initialization and accessors to the op-table (see ops.json).
 op_table = None
 
+
 def init_op_table():
     op_table_reader = open("ops.json", "r")
     global op_table
     op_table = json.JSONDecoder().decode(op_table_reader.read())
+
 
 def get_op_table():
     if op_table is None:
@@ -23,11 +25,14 @@ def get_op_table():
     else:
         return op_table
 
+
 def get_op_num_args(opcode):
     return get_op_table()[opcode]["num_args"]
 
+
 def get_op_is_associative(opcode):
     return get_op_table()[opcode]["associative"]
+
 
 def get_op_format_str(opcode, lang):
     format_str = get_op_table()[opcode]["format"][lang]
@@ -79,31 +84,18 @@ def get_default_func_name():
 def get_default_compiler_options():
     return {
         "variables_predefined": False,
+        "variables": [],
+        "variable_types": [],
         "output_lang": "py",
-        "var_name_mapper": ast_var_to_function_var
+        "var_name_mapper": None
     }
 
-
-def ast_var_to_function_var(name):
-    """
-    Converts an AST variable to an expression in terms of function 
-    arguments.
-    """
-    seq = name.split(".")
-    ref = seq[0]
-    seq = seq[1:]
-    for attr in seq:
-        if attr.startswith("idx:"):
-            idx = attr[4:]
-            ref += "[" + idx + "]"
-        else:
-            ref += "[\"" + attr + "\"]"
-    return ref
 
 def handle_literal(curr, options):
     curr.set_expr(str(curr.node()))
 
-def handle_variable(curr, variables, options):
+
+def handle_variable(curr, options):
     if options["variables_predefined"]:
         # Map this sequence to the correct value somehow.
         # Option 1: 
@@ -118,9 +110,11 @@ def handle_variable(curr, variables, options):
         # We'd need to pass in the variable-to-index map to the 
         # compiler.
         converter = options["var_name_mapper"]
+        if converter is None:
+            raise RuntimeError("No variable mapper provided.")
         curr.set_expr(converter(curr.node()))
     else:   
-        variables.append(curr.node())
+        options["variables"].append(curr.node())
         curr.set_expr(curr.node())
 
 
@@ -133,13 +127,14 @@ def format_arg_list(variables, lang):
     else:
         return NotImplemented
 
-def format_function_definition(variables, expr, options):
+
+def format_function_definition(expr, options):
     lang = options["output_lang"]
     if "func_name" in options:
         func_name = options["func_name"]
     else:
         func_name = get_default_func_name()
-    arg_list = format_arg_list(variables, lang) 
+    arg_list = format_arg_list(options["variables"], lang) 
     if lang == "py":
         func_code = "lambda " + arg_list + ": " + expr
     elif lang == "c":
@@ -152,6 +147,7 @@ def format_function_definition(variables, expr, options):
     else:
         return NotImplemented
     return func_name, func_code
+
 
 def format_expr(opcode, subs, options):
     lang = options["output_lang"]
@@ -167,16 +163,19 @@ def handle_nonterminal_expr(node, options):
     subexprs = [sub.expr() for sub in node.subs()]
     return format_expr(opcode, subexprs, options)
 
-def handle_terminal_expr(curr, variables, options):
+
+def handle_terminal_expr(curr, options):
     if is_literal(curr.node()):
         handle_literal(curr, options)
     else:
-        handle_variable(curr, variables, options)
+        handle_variable(curr, options)
+
 
 def init_subexpr(operand, options):
     sub = CompileNode()
     sub.set_node(operand)
     return sub
+
 
 def process_subexprs(curr, stack, options):
     # Push subexpressions onto the stack
@@ -194,7 +193,6 @@ def process_subexprs(curr, stack, options):
 # Compilation entry point.
 def compile_tree(
         syntax_tree, 
-        variables=None, 
         compiler_options=None):
     """
     Convert the syntax tree to a compiled (python bytecode) python 
@@ -221,20 +219,13 @@ def compile_tree(
         for k, v in compiler_options.items():
             options[k] = v
 
-    # Validate `old_variables`
-    if variables is None:
-        variables = []
-        options["variables_predefined"] = False
-    else:
-        options["variables_predefined"] = True
-
     # DFS for compilation ----------------------------------------------
     stack = []
     stack.append(root)
     while len(stack) > 0:
         curr = stack[-1]
         if is_leaf(curr.node()):
-            handle_terminal_expr(curr, variables, options=options)
+            handle_terminal_expr(curr, options=options)
             stack.pop()
         elif curr.subs() == None:
             # Create subexpressions, assign them to the current node, 
@@ -246,6 +237,5 @@ def compile_tree(
             stack.pop()
 
     # Create function signature ----------------------------------------
-    func_name, func_code = format_function_definition(
-            variables, root.expr(), options)
+    func_name, func_code = format_function_definition(root.expr(), options)
     return func_name, func_code
