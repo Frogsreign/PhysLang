@@ -81,8 +81,6 @@ class Interpreter(object):
 
     def interpretForce(self, statement):
 
-        objA = self.interpretExpression(statement.objA)
-        objB = self.interpretExpression(statement.objB)
         func = self.interpretExpression(statement.func)
 
         

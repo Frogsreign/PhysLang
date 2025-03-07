@@ -70,43 +70,25 @@ class Parser(object):
         return PointStatement(pos, vel=vel, acc=acc, m=m, e=e)
 
     def forceStatement(self):
-        # force(a, b, func=a.x + b.x)
+        # force(function of p and q)
+        # forces are all particle-particle interactions -> only p and q allowed as identifiers
 
-        # Attributes
-        objA = None
-        objB = None
         func = None
 
-        self.consume(LEFT_PAREN, "Expected '(' after 'point'.")
-        # Get the first identifier
-        objA = self.expression()
-
-        # If it isn't a variable, get upset
-        if not isinstance(objA, VariableExpression): raise Exception("Identifier not provided for force.")
-        
-        # Then we should find a comma leading us to the second identifier
-        if self.match(COMMA):
-            objB = self.expression()
-            if not isinstance(objB, VariableExpression): raise Exception("Identifier not provided for force.")
-        else: raise Exception("Insufficient arguments for force. 1 provided, 3 required.")
-
-        # And finally a second comma leading to the function
-        if self.match(COMMA):
-            func = self.expression()
-
-        # Optional arguments for defining constants
-        # This seems hard.
+        self.consume(LEFT_PAREN, "Expected '(' after 'force'.")
+        func = self.expression(force=True)
 
         self.consume(RIGHT_PAREN, "Expected ')' to close force().")
-        return ForceStatement(objA, objB, func)
+        return ForceStatement(func)
         
 
     # Expression management functions
     # Check for commas, terms, factors, unaries, primaries (bracket expressions mostly), and numbers/strings, in this order
 
     # Base tree; has an indicator (bracket) for if working with parameters
-    def expression(self, bracket=False):
+    def expression(self, bracket=False, force=False):
         if bracket: return self.comma()
+        if force: return self.period()
         return self.term()
     
     # Handles comma separated parameters/vector components

@@ -22,7 +22,7 @@ class Simulation:
         self._dt = dt
         self._steps_per_update = steps_per_update
         self._state = state
-        self._paused = True
+        self._paused = False
         self._started = False 
         # Configure event handlers (this will eventually be done in its own function).
         self._fig.canvas.mpl_connect("button_press_event", self._toggle_pause)
