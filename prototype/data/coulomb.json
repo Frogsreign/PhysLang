@@ -1,0 +1,22 @@
+[
+    {
+      "name": "Electron",
+      "properties": {
+        "mass": 1,
+        "e_charge": -1,
+        "pos": [-10, 0, 0],
+        "vel": [1, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    },
+    {
+      "name": "Positron",
+      "properties": {
+        "mass": 1,
+        "e_charge": 1,
+        "pos": [10, 0, 0],
+        "vel": [-1, 0, 0],
+        "acc": [0, 0, 0]
+      }
+    }
+]

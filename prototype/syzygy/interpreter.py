@@ -1,0 +1,134 @@
+# imports
+from tokens import *
+from tokentype import *
+from statement import *
+from expression import *
+from parser import *
+import numpy as np
+
+# Interpreter class
+class Interpreter(object):
+    def __init__(self, statements):
+      self.statements = statements
+      self.dictionary = {}
+      self.dicts = []
+      self.pointCount = 0
+
+    def run(self):
+        for statement in self.statements:
+            self.interpretStatement(statement)
+
+    def interpretStatement(self, statement):
+
+        if isinstance(statement, PointStatement): self.interpretPoint(statement)
+        elif isinstance(statement, ForceStatement): self.interpretForce(statement)
+        # more branches for different types of statments
+        else: pass
+
+    def interpretExpression(self, expression):
+        if isinstance(expression, CommaExpression): return self.interpretComma(expression)
+        elif isinstance(expression, BinaryExpression): return self.interpretBinary(expression)
+        elif isinstance(expression, UnaryExpression): return self.interpretUnary(expression)
+        elif isinstance(expression, LiteralExpression): return self.interpretLiteral(expression)
+        elif isinstance(expression, ParenthesesExpression): return self.interpretParentheses(expression)
+        elif isinstance(expression, BracketExpression): return self.interpretBracket(expression)
+        else: return None
+
+    # Creates a JSON entry for a singular point statement
+    def interpretPoint(self, statement):
+
+        # Interpret the individual params
+        pos = self.interpretExpression(statement.pos)
+        vel = self.interpretExpression(statement.vel)
+        acc = self.interpretExpression(statement.acc)
+        m = self.interpretExpression(statement.m)
+        e = self.interpretExpression(statement.e)
+
+        if pos is None: pos = [0, 0, 0]
+        if vel is None: vel = [0, 0, 0]
+        if acc is None: acc = [0, 0, 0]
+        if m is None: m = np.inf
+        if e is None: e = 0
+
+        # Set up the net force property (this isn't provided by the user but we'll need it for the animation)
+        net_force = 0
+        if np.shape(pos) != ():
+            net_force = list(np.zeros_like(pos))
+
+        if np.shape(pos) != np.shape(vel) or np.shape(pos) != np.shape(acc) or np.shape(vel) != np.shape(acc):
+            raise Exception("Dimensions of position, velocity, and acceleration must be the same.")
+
+        # Create the property dictionary
+        properties = {
+            "net-force": net_force,
+            "pos": pos,
+            "mass": m,
+            "vel": vel,
+            "acc": acc,
+            "e_charge": e
+        }
+
+        # Create the dictionary for the point
+        pointDict = {
+            "name": self.pointCount, 
+            "properties": properties
+        }
+
+        self.dictionary.update({self.pointCount: pointDict})
+        self.pointCount += 1
+        self.dicts.append(pointDict)
+        print(pointDict)
+
+    def interpretForce(self, statement):
+
+        func = self.interpretExpression(statement.func)
+
+        
+
+
+
+    def interpretBinary(self, expression):
+        left = self.interpretExpression(expression.left)
+        right = self.interpretExpression(expression.right)
+        operator = expression.operator.type
+
+        # validate?
+
+        # also, comparisons would go here if those get added in
+
+        if operator == PLUS: return left + right
+        elif operator == MINUS: return left - right
+        elif operator == MULTIPLY: return left * right
+        elif operator == DIVIDE: return left / right
+        elif operator == EXPONENT: return left**right
+
+        return None
+
+    def interpretUnary(self, expression):
+        right = self.interpretExpression(expression.right)
+        operator = expression.operator.type
+
+        return -float(right)
+
+    def interpretLiteral(self, expression):
+        return expression.value
+
+    def interpretParentheses(self, expression):
+        return self.interpret(expression.expression)
+
+    # These two should always appear together and the result needs to return a numpy array
+    def interpretComma(self, expression):
+        return list(np.insert(self.interpretExpression(expression.right), 0, self.interpretExpression(expression.left)))
+
+    def interpretBracket(self, expression):
+        return self.interpretExpression(expression.expression)
+
+
+    # Helper functions
+    # validateOperands -> currently the program throws errors with i.e. 5 + try, since the parser is
+    # not built for it. Would need to add something like this if I upgrade the parser.
+
+
+
+    
+

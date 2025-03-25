@@ -34,7 +34,7 @@ if __name__ == '__main__':
             state=state)
 
     # Setup background.
-    sim.config_fig()
+    sim.config_fig() 
     sim.config_bg()
     sim.config_plot_limits(
             (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
