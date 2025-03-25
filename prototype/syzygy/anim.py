@@ -17,6 +17,7 @@ import matplotlib.axes
 
 class Simulation:
     def __init__(self, dt, steps_per_update, state: SimState):
+        matplotlib.use('WebAgg')
         self._fig = plt.figure()
         self._ax = self._fig.add_subplot(projection='3d')
         self._dt = dt
