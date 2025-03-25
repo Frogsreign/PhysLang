@@ -7,6 +7,7 @@ from particle import Particle
 from anim import *
 from sim_state import SimState
 
+
 input = input("Please enter a command: ")
 scan = Scanner(input)
 tokens = scan.scan()
