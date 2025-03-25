@@ -23,6 +23,7 @@ class Simulation:
         self._steps_per_update = steps_per_update
         self._state = state
         self._paused = False
+
         self._started = False 
         # Configure event handlers (this will eventually be done in its own function).
         self._fig.canvas.mpl_connect("button_press_event", self._toggle_pause)
@@ -80,6 +81,7 @@ class Simulation:
         # self.config_plot_limits_track()
 
         # Initialize point objects.
+
         num_points = len(self._state._particles)
         print(self._state._particles)
         

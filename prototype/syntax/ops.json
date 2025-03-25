@@ -1,0 +1,119 @@
+{
+  "*": {
+    "res_type": 0,
+    "num_args": 2,
+    "associative": 1,
+    "format": {
+      "py": "(%0 * %1)",
+      "c": "(%0 * %1)"
+    }
+  },
+  "+": {
+    "res_type": 0,
+    "num_args": 2,
+    "associative": 1,
+    "format": {
+      "py": "(%0 + %1)",
+      "c": "(%0 + %1)"
+    }
+  },
+  "/": {
+    "res_type": 0,
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 / %1)",
+      "c": "(%0 / %1)"
+    }
+  },
+  "-": {
+    "res_type": 0,
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 - %1)",
+      "c": "(%0 - %1)"
+    }
+  },
+  "?": {
+    "res_type": 1,
+    "num_args": 3,
+    "associative": 0,
+    "format": {
+      "py": "(%1 if %0 else %2)",
+      "c": "(%0 ? %1 : %2)"
+    }
+  },
+  "==": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 == %1)",
+      "c": "(%0 == %1)"
+    }
+  },
+  "<=": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 <= %1)",
+      "c": "(%0 <= %1)"
+    }
+  },
+  ">=": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 >= %1)",
+      "c": "(%0 >= %1)"
+    }
+  },
+  "<": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 < %1)",
+      "c": "(%0 < %1)"
+    }
+  },
+  ">": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0 > %1)",
+      "c": "(%0 > %1)"
+    }
+  },
+  "~": {
+    "res_type": "bool",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(not %0)",
+      "c": "(!%0)"
+    }
+  },
+  "^": {
+    "res_type": "0",
+    "num_args": 2,
+    "associative": 0,
+    "format": {
+      "py": "(%0**%1)",
+      "c": 0
+    }
+  },
+  "sqrt": {
+    "res_type": "0",
+    "num_args": 1,
+    "associative": 0,
+    "format": {
+      "py": "(%0**(1/2))",
+      "c": 0
+    }
+  }
+}
