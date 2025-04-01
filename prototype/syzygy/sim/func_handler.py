@@ -1,6 +1,11 @@
+#!/usr/bin/python3
 
 from syzygy.compile import compile2
 from syzygy.syntax import vars 
+
+# A helper class for the SimState class. FuncHandler compiles functions (forces 
+# and updates) and maps functions to their output objects in the global data 
+# array.
 
 
 class FuncHandler:

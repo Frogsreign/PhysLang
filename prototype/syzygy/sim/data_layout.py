@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-# Convert json to an array and a data map.
+# A helper class for the SimState class. DataLayout maps properties to indices 
+# in a global data array.
+
 
 import numpy
 import json
