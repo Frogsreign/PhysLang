@@ -1,5 +1,0 @@
-pyproject.toml
-syzygy.egg-info/PKG-INFO
-syzygy.egg-info/SOURCES.txt
-syzygy.egg-info/dependency_links.txt
-syzygy.egg-info/top_level.txt
