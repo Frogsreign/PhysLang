@@ -13,8 +13,11 @@ import string
 op_table = None
 
 
+OPS_PATH = "syntax/ops.json"
+
+
 def init_op_table():
-    op_table_reader = open("ops.json", "r")
+    op_table_reader = open(OPS_PATH, "r")
     global op_table
     op_table = json.JSONDecoder().decode(op_table_reader.read())
 

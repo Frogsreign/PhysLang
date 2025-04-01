@@ -1,11 +1,7 @@
 import numpy
 import time
 
-<<<<<<< HEAD
-import datalayout
-=======
 import data_layout
->>>>>>> 7d3699f (Breaks up long functions/long-winded logic, and revises compile2's subtraction and division opcodes.)
 import func_handler
 
 # Ignore the long schematic comments.
@@ -16,11 +12,7 @@ import func_handler
 
 class SimState:
     def __init__(self, particles: list, forces: list, update_rules: list):
-<<<<<<< HEAD
-        self.data_layout = datalayout.create_data_layout(particles)
-=======
         self.data_layout = data_layout.create_data_layout(particles)
->>>>>>> 7d3699f (Breaks up long functions/long-winded logic, and revises compile2's subtraction and division opcodes.)
         self._data = numpy.zeros(self.data_layout.sim_size(), 
                                  dtype=numpy.float64)
         self._fresh_data = self._data.copy()
@@ -61,7 +53,6 @@ class SimState:
             #time.sleep(1)
             #print(self._data[0:13])
             # Step once.
-<<<<<<< HEAD:prototype/sim_state.py
             for i in range(num_particles):
                 for j in range(num_particles):
                     if i == j:
@@ -99,17 +90,6 @@ class SimState:
                     # Location of the data to be updated.
                     offset = i * particle_size + prop_idx
                     self._fresh_data[offset] = update_rule(i, dt, self._data)
-=======
-            for i in range(len(self._particles)):
-                # Compute net force between each particle pair.
-                df = np.zeros((3,))
-                for j in range(len(self._particles)):
-                    if j == i:
-                        continue
-                    df += self._particles[i].net_force_from(self._particles[j], t)
-                
-                self._particles[i].update_props(df, dt)
->>>>>>> main:prototype/syzygy/sim_state.py
 
             # Awful debugger function.
             def print_data():
