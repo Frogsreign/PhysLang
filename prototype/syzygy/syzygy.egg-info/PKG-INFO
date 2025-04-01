@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: syzygy
+Version: 1.0.0
+Author-email: Jacob Leider <jhl141@case.edu>
+Maintainer-email: Jacob Leider <jhl141@case.edu>
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown

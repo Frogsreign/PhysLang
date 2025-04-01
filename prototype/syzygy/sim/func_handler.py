@@ -1,5 +1,7 @@
-import compile2
-import syntax.vars
+
+from syzygy.compile import compile2
+from syzygy.syntax import vars 
+
 
 class FuncHandler:
 
@@ -15,7 +17,7 @@ class FuncHandler:
 
         # Define variables and variable name mapper.
         def var_converter(ast_var_name):
-            particle_name, prop_name, prop_idx = syntax.vars.parse_var(ast_var_name)
+            particle_name, prop_name, prop_idx = vars.parse_var(ast_var_name)
             return f"data[{data_layout.idx_as_str(
                     prop_name=prop_name, 
                     particle_id=particle_name, 
@@ -46,7 +48,7 @@ class FuncHandler:
             if ast_var_name.startswith("dt"):
                 return "dt"
             else:
-                _, prop_name, prop_idx = syntax.vars.parse_var(ast_var_name)
+                _, prop_name, prop_idx = vars.parse_var(ast_var_name)
                 return f"data[{data_layout.idx_as_str(prop_name=prop_name, index=prop_idx)}]"
                     
         compiler_options = {
@@ -111,6 +113,6 @@ class FuncHandler:
 
 
     def set_outp(self, update_rule_entry, update_rule_outps, data_layout):
-        _, prop_name, prop_idx = syntax.vars.parse_var(update_rule_entry["out"])
+        _, prop_name, prop_idx = vars.parse_var(update_rule_entry["out"])
         update_rule_outps.append(data_layout.idx_of(
             prop_name=prop_name, index=prop_idx))

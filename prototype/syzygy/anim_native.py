@@ -5,8 +5,7 @@
 # FOR TESTING PURPOSES
 # An version of the simulation class that uses matplotlib's default backend.
 
-
-from sim_state import SimState
+from syzygy.sim.sim_state import SimState
 
 import matplotlib
 import matplotlib.pyplot as plt

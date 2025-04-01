@@ -1,8 +1,8 @@
 import numpy
 import time
 
-import data_layout
-import func_handler
+from syzygy.sim import data_layout
+from syzygy.sim import func_handler
 
 # Ignore the long schematic comments.
 
