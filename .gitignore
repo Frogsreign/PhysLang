@@ -1,3 +1,7 @@
+build/
+syzygy.egg-info/
+__pycache__/
+*.pyc
 .DS_Store
 JonasMidterm.zip
 *.pyc
