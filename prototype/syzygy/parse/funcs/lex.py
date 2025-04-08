@@ -61,9 +61,9 @@ class State(enum.Enum):
 # Terminal expressions.
 RX_REF = re.compile("[AB].([a-z]|-)*(.idx:[0-9]*)?")
 RX_LIT = re.compile("([+-]?([0-9]*[.])?[0-9]+(e(-)?[0-9]*)?)|(dt)")
-RX_OP = re.compile("[+-*/^]")
-RX_LPAREN = re.compile("(")
-RX_RPAREN = re.compile(")")
+RX_OP = re.compile(r"[\+\-\*\/\^]")
+RX_LPAREN = re.compile(r"\(")
+RX_RPAREN = re.compile(r"\)")
 RX_COMMA = re.compile(",")
 RX_NORM = re.compile("norm")
 RX_DOT = re.compile("dot")

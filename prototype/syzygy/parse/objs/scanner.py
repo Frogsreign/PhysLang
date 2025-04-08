@@ -1,6 +1,6 @@
-import interpreter
-from tokens import *
-from tokentype import *
+import syzygy.parse.objs.interpreter as interpreter
+from syzygy.parse.objs.tokens import *
+from syzygy.parse.objs.tokentype import *
 
 # Scanner class
 class Scanner(object):

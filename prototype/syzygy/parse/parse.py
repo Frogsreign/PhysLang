@@ -1,9 +1,9 @@
 
-import funcs.lex
-import funcs.ast
-import objs.interpreter
-import objs.scanner
-import objs.parser
+from syzygy.parse.funcs import lex
+from syzygy.parse.funcs import ast
+from syzygy.parse.objs import interpreter
+from syzygy.parse.objs import scanner
+from syzygy.parse.objs import parser
 from syzygy.sim import data_layout
 
 # Factored out in case we change the tree format.
@@ -13,31 +13,31 @@ def get_particles(tree: dict):
 
 def func_expr_to_ast(expr, metadata):
     # lex
-    tokens = funcs.lex.lex(expr)
+    tokens = lex.lex(expr)
     # validate/parse
-    if not funcs.lex.parse(tokens):
+    if not lex.parse(tokens):
         raise ValueError(f"Invalid expression {expr}")
     # Build AST with norms and dots
-    ast = funcs.ast.tokens_to_ast(tokens)
+    func_ast = ast.tokens_to_ast(tokens)
     # Flatten out norms and dots
-    ast = funcs.ast.expand_dots(ast)
+    func_ast  = ast.expand_dots(func_ast)
     # Expand dots into indexed sums
-    ast = funcs.ast.collapse_dots(ast, metadata)
+    func_ast = ast.collapse_dots(func_ast, metadata)
     return ast
 
 
 def convert_force_to_ast(force, metadata):
     expr = force["func"]
-    ast = func_expr_to_ast(expr, metadata)
+    force_ast = func_expr_to_ast(expr, metadata)
     # Becomes a subtree of the AST
-    force["func"] = ast
+    force["func"] = force_ast
 
 
 def convert_update_rule_to_ast(update, metadata):
     expr = update["func"]
-    ast = func_expr_to_ast(expr, metadata)
+    update_ast = func_expr_to_ast(expr, metadata)
     # Becomes a subtree of the AST
-    update["func"] = ast
+    update["func"] = update_ast
 
 
 def convert_funcs_to_asts(tree: dict):
@@ -52,15 +52,15 @@ def convert_funcs_to_asts(tree: dict):
 
 
 def build_entire_ast(script):
-    scan = objs.scanner.Scanner(input)
+    scan = scanner.Scanner(input)
     # Lex
     tokens = scan.scan()
     # Parse
-    obj_parser = objs.parser.Parser(tokens)
+    obj_parser = parser.Parser(tokens)
     statements = obj_parser.parse()
     # Convert to AST
-    interpreter = objs.interpreter.Interpreter(statements)
-    interpreter.run()
+    terp = interpreter.Interpreter(statements)
+    terp.run()
     # Convert functions to subtrees
     try:
         convert_funcs_to_asts(interpreter.tree)

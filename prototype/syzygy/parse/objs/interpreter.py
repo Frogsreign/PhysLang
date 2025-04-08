@@ -1,9 +1,9 @@
 # imports
-from tokens import *
-from tokentype import *
-from statement import *
-from expression import *
-from parser import *
+from syzygy.parse.objs.tokens import *
+from syzygy.parse.objs.tokentype import *
+from syzygy.parse.objs.statement import *
+from syzygy.parse.objs.expression import *
+from syzygy.parse.objs.parser import *
 import numpy as np
 
 # Interpreter class
