@@ -1,1 +1,1 @@
-{"group-id": 0, "forces": [{"id": 0, "in": ["a", "b"], "force": "(a+b)"}], "update-rules": [], "particles": []}
+{"group-id": 0, "forces": [{"name": 0, "in": ["a", "b"], "func": "a.mass + dot(a.vel, v.vel)"}], "update-rules": [], "particles": []}

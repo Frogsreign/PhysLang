@@ -26,6 +26,7 @@ class Scanner(object):
             'vel': VEL,
             'acc': ACC,
             'input': INPUT,
+            'output': OUTPUT,
             'func': FUNC,
             'm': M,
             'e': E

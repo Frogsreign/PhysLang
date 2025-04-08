@@ -96,6 +96,9 @@ class Interpreter(object):
 
         update = {
             "name": self.updateCount,
+            "in": None,
+            "out": None,
+            "func": None
         }
 
         self.dictionary["update-rules"].append(update)
