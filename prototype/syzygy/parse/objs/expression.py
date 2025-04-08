@@ -12,17 +12,6 @@ class CommaExpression(Expression):
     def toDict(self):
         return [self.left.toDict(), self.right.toDict()]
     
-# class PeriodExpression(Expression):
-#     def __init__(self, parent, child):
-#         self.parent = parent
-#         self.child = child
-
-#     def toString(self):
-#         return self.parent.toString() + "." + self.child.toString()
-    
-#     def toDict(self):
-#         return self.toString()
-    
 class VariableExpression(Expression):
     def __init__(self, var):
         self.var = var

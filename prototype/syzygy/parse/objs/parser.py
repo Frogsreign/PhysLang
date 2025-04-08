@@ -28,10 +28,9 @@ class Parser(object):
     def statement(self):
         if self.match(POINT): return self.pointStatement()
         elif self.match(FORCE): return self.forceStatement()
+        elif self.match(UPDATE): return self.updateStatement()
         else: # Catch bad format
             raise Exception("Unexpected command.")
-        # elif self.match(FORCE): return self.forceStatement()
-        # elif self.match(UPDATE): return self.updateStatement()
 
     def pointStatement(self):
         # point(pos=X, vel=X, acc=X, m=X, e=X, name=X)
@@ -70,8 +69,8 @@ class Parser(object):
         return PointStatement(pos, vel=vel, acc=acc, m=m, e=e)
 
     def forceStatement(self):
-        # force(function of p and q)
-        # forces are all particle-particle interactions -> only p and q allowed as identifiers
+        # force(input=[a, b, etc.], func=(function of a, b, etc.))
+        # force statements provide their inputs and the function that calculates an output from them.
 
         input = None
         func = None
@@ -87,6 +86,10 @@ class Parser(object):
         self.consume(RIGHT_PAREN, "Expected ')' to close force().")
         
         return ForceStatement(input=input, func=func)
+    
+    def updateStatement(self):
+
+        return UpdateStatement()
         
 
     # Expression management functions
@@ -106,17 +109,6 @@ class Parser(object):
             expression = CommaExpression(expression, right)
         return expression
     
-    # def period(self):
-    #     expression = self.term()
-    #     if isinstance(expression, VariableExpression):
-    #         if self.match(PERIOD):
-    #             child = self.term()
-    #             if isinstance(child, (POS, VEL, ACC, M, E)):
-    #                 expression = PeriodExpression(expression, child)
-    #                 print(expression.toString())
-    #             else: raise Exception("Non-attribute after text period.")
-    #     return expression
-
     # Handles addition and subtraction terms
     def term(self):
         expression = self.factor() # next down the chain

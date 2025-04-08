@@ -10,10 +10,11 @@ import numpy as np
 class Interpreter(object):
     def __init__(self, statements):
       self.statements = statements
-      self.dictionary = {}
-      self.dicts = []
+      self.dictionary = {} # What will be output to the json file for animation
+      self.dicts = [] # Not output, internal list for structures
       self.pointCount = 0
       self.forceCount = 0
+      self.updateCount = 0
 
     def run(self):
         for statement in self.statements:
@@ -92,8 +93,18 @@ class Interpreter(object):
         self.dictionary.update({self.forceCount: force})
         self.dicts.append(force)
         print(force)
+        self.forceCount += 1
 
-        
+    def interpretUpdate(self, statement):
+
+        update = {
+            "name": self.updateCount,
+        }
+
+        self.dictionary.update({self.updateCount: update})
+        self.dicts.append(update)
+        print(update)
+        self.updateCount += 1
 
     def interpretBinary(self, expression):
         left = self.interpretExpression(expression.left)

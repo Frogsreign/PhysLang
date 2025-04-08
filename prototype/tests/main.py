@@ -1,7 +1,9 @@
-from scanner import *
-from parser import *
-from interpreter import *
+from syzygy.parse.objs.scanner import *
+from syzygy.parse.objs.parser import *
+from syzygy.parse.objs.interpreter import *
 import json
+
+# TODO: Add file support for many commands
 
 input = input("Please enter a command: ")
 scan = Scanner(input)
@@ -20,3 +22,5 @@ interpret.run()
 with open("syzygy/data/sample.json", "w") as outfile:
     json.dump(interpret.dicts, outfile)
 
+# TODO: Configure the animation from the json file created
+# TODO: Streamline access and ability to run the main file w/ a file parameter

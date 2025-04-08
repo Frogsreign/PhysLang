@@ -1,1 +1,1 @@
-[{"name": 0, "in": ["a", "b"], "force": "(a.mass+b.mass)"}]
+[{"name": 0, "properties": {"net-force": [0, 0, 0], "pos": [null, null, null], "mass": 1.0, "vel": [null, null, null], "acc": [null, null, null], "e_charge": 1.0}}]
