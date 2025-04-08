@@ -61,13 +61,13 @@ class State(enum.Enum):
 # Terminal expressions.
 RX_REF = re.compile("[AB].([a-z]|-)*(.idx:[0-9]*)?")
 RX_LIT = re.compile("([+-]?([0-9]*[.])?[0-9]+(e(-)?[0-9]*)?)|(dt)")
-RX_OP = re.compile("[\+\-\*\/\^]")
-RX_LPAREN = re.compile("\(")
-RX_RPAREN = re.compile("\)")
+RX_OP = re.compile("[+-*/^]")
+RX_LPAREN = re.compile("(")
+RX_RPAREN = re.compile(")")
 RX_COMMA = re.compile(",")
 RX_NORM = re.compile("norm")
 RX_DOT = re.compile("dot")
-RX_TERM = re.compile("\$")
+RX_TERM = re.compile("$")
 
 
 # State transition table: Maps (state, input character, stack character) triples
@@ -96,9 +96,9 @@ def get_token_id(tok):
   elif re.fullmatch(RX_OP, tok):      return Token.OP
   elif re.fullmatch(RX_LPAREN, tok):  return Token.LPAREN
   elif re.fullmatch(RX_RPAREN, tok):  return Token.RPAREN
-  elif re.fullmatch(RX_COMMA, tok):   return Token.RX_COMMA
-  elif re.fullmatch(RX_NORM, tok):    return Token.RX_NORM
-  elif re.fullmatch(RX_DOT, tok):     return Token.RX_DOT
+  elif re.fullmatch(RX_COMMA, tok):   return Token.COMMA
+  elif re.fullmatch(RX_NORM, tok):    return Token.NORM
+  elif re.fullmatch(RX_DOT, tok):     return Token.DOT
   elif re.fullmatch(RX_TERM, tok):    return Token.TERM
   else: raise Exception(f"Invalid token {tok}")
 
@@ -147,7 +147,7 @@ def transition(state, transitions, tok, stack):
 
 terminal_states = [State.ACC, State.REJ]
 
-def parse(tokens: list, transitions: dict) -> None:
+def parse(tokens: list) -> bool:
   """
   PDA implementation: A simple loop that
       1. Checks for termination

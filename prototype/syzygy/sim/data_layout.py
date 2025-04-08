@@ -8,22 +8,15 @@ import numpy
 import json
 
 class DataLayout:
-    def __init__(self, particle_name_to_idx, prop_name_to_idx, 
-                 prop_offsets, prop_sizes, num_particles, 
-                 particle_size):
-        self._particle_name_to_idx = particle_name_to_idx
-        self._prop_name_to_idx = prop_name_to_idx
-        self._particle_size = particle_size
-        self._prop_offsets = prop_offsets
-        self._prop_sizes = prop_sizes
-        self._num_particles = num_particles
+    def __init__(self, particles_list):
+        self.particle_metadata = ParticleMetadata(particles_list)
 
     def idx_of(self, particle_name=None, prop_name=None, index=0):
         idx = 0
         if particle_name is not None:
-            idx += self._particle_size * self._particle_name_to_idx[particle_name]
+            idx += self.particle_metadata.particle_size * self.particle_metadata.particle_name_to_idx[particle_name]
         if prop_name is not None:
-            idx += self._prop_offsets[self._prop_name_to_idx[prop_name]]
+            idx += self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
         idx += index
         return idx
 
@@ -50,17 +43,17 @@ class DataLayout:
                         data[idx] = prop_val
 
     def idx_as_str(self, particle_id="obj", prop_name=None, index=0):
-        idx = self._prop_offsets[self._prop_name_to_idx[prop_name]] + index
+        idx = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]] + index
         return f"{idx} + {particle_id} * {self.particle_size()}"    
 
     def prop_offset(self, prop_name) -> int:
-        return self._prop_offsets[self._prop_name_to_idx[prop_name]]
+        return self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
 
     def prop_size(self, prop_name) -> int:
-        return self._prop_sizes[self._prop_name_to_idx[prop_name]]
+        return self.particle_metadata.prop_sizes[self.particle_metadata.prop_name_to_idx[prop_name]]
 
     def prop_idx_all_particles(self, prop_name):
-        prop_offset = self._prop_offsets[self._prop_name_to_idx[prop_name]]
+        prop_offset = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
         out = numpy.array([
             range(i * self.particle_size() + prop_offset, 
                   i * self.particle_size() + prop_offset + 3) 
@@ -68,16 +61,44 @@ class DataLayout:
         return out
 
     def num_particles(self) -> int:
-        return self._num_particles
+        return self.particle_metadata.num_particles
 
     def particle_size(self):
-        return self._particle_size
+        return self.particle_metadata.particle_size
 
     def sim_dim(self) -> int:
         return self.prop_size("pos")
 
     def sim_size(self):
         return self.particle_size() * self.num_particles()
+
+
+class ParticleMetadata:
+    def __init__(self, particles_list):
+        self.num_particles = len(particles_list)
+        self.particle_names = get_particle_names(particles_list) # Make names unique, etc.
+        self.prop_names = get_prop_names(particles_list)
+        # Invert prop, particle lists.
+        self.particle_name_to_idx = list_inverse(self.particle_names)
+        self.prop_name_to_idx = list_inverse(self.prop_names)
+        # Get sizes and offsets.
+        self.prop_sizes = get_prop_sizes(particles_list, self.prop_name_to_idx)
+        self.prop_offsets, particle_size_without_net_force = get_prop_offsets(self.prop_sizes)
+        # Add `net-force` property. Update prop_sizes, prop_offsets, 
+        # prop_names and prop_to_idx
+        net_force_idx = len(self.prop_names)
+        pos_size = get_pos_size(self.prop_name_to_idx, self.prop_sizes) 
+        self.prop_name_to_idx["net-force"] = net_force_idx
+        self.prop_names.append("net-force")
+        self.prop_sizes.append(pos_size)
+        self.prop_offsets.append(particle_size_without_net_force)
+        self.particle_size = particle_size_without_net_force + pos_size
+
+    def prop_size(self, prop: int | str):
+        if isinstance(prop, int):
+            return self.prop_sizes[prop]
+        elif isinstance(prop, str):
+            return self.prop_sizes[self.prop_name_to_idx[prop]]
 
 
 def create_data_layout(particles_list):
@@ -93,34 +114,7 @@ def create_data_layout(particles_list):
         DataLayout: an DataLayout object whose particles and properties 
         are those of `particles_list`.
     """
-    num_particles = len(particles_list)
-    particle_names = get_particle_names(particles_list) # Make names unique, etc.
-    prop_names = get_prop_names(particles_list)
-    # Invert prop, particle lists.
-    particle_name_to_idx = list_inverse(particle_names)
-    prop_name_to_idx = list_inverse(prop_names)
-    # Get sizes and offsets.
-    prop_sizes = get_prop_sizes(particles_list, prop_name_to_idx)
-    prop_offsets, particle_size_without_net_force = get_prop_offsets(prop_sizes)
-    # Add `net-force` property. Update prop_sizes, prop_offsets, 
-    # prop_names and prop_to_idx
-    net_force_idx = len(prop_names)
-    pos_size = get_pos_size(prop_name_to_idx, prop_sizes) 
-    prop_name_to_idx["net-force"] = net_force_idx
-    prop_names.append("net-force")
-    prop_sizes.append(pos_size)
-    prop_offsets.append(particle_size_without_net_force)
-    particle_size = particle_size_without_net_force + pos_size
-    # Sort properties alphabetically (TODO).
-    # Create the offset map.
-    data_layout = DataLayout(
-            particle_name_to_idx, 
-            prop_name_to_idx, 
-            prop_offsets, 
-            prop_sizes, 
-            num_particles,
-            particle_size)
-    return data_layout
+    return NotImplemented
     
 
 def get_pos_size(prop_name_to_idx, prop_sizes) -> int:

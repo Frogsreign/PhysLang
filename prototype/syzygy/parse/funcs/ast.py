@@ -6,6 +6,8 @@
 #     * Converts norms to dot products
 # 5. Collapse dot products
 
+from syzygy.sim import data_layout
+
 precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
 right_associative = {'^'}
 
@@ -49,8 +51,7 @@ def min_precedence(tokens):
 # extra info to the compiler about variables.
 def tokens_to_ast(tokens):
   """
-  Inserts pairs of parentheses into a token sequence to explicitly specify an
-  order of operations.
+  Converts a validated expression into an AST.
 
   Example: "3 + 5 * 2 - 8 / 4" becomes `[-, [+, 3, [*, 5, 2]], [/, 8, 4]]`
   """
@@ -171,14 +172,20 @@ def collapse_dot(sub, a, b, n):
   sub.extend(["*", [f"{a}.idx:{n - 1}"], [f"{b}.idx:{n - 1}"]])
 
 
-def collapse_dots(tree):
+def collapse_dots(tree, particle_metadata):
   stack = [tree]
   while len(stack) > 0:
     sub = stack.pop()
     if sub[0] == 'dot':
       prop_a, prop_b = sub[1][0], sub[2][0]
-      collapse_dot(sub, prop_a, prop_b, 3)
+
+      # Make sure the properties have the same dimensionality
+      _, a_name = prop_a.split(".")
+      _, b_name = prop_b.split(".")
+      if particle_metadata.prop_size(a_name) != particle_metadata.prop_size(b_name):
+          raise ValueError("encountered a dot product between vectors of different dimensions")
+
+      collapse_dot(sub, prop_a, prop_b, particle_metadata.prop_size(a_name))
     else:
       stack.extend(sub[1:])
   return tree
-

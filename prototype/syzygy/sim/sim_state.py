@@ -12,7 +12,7 @@ from syzygy.sim import func_handler
 
 class SimState:
     def __init__(self, particles: list, forces: list, update_rules: list):
-        self.data_layout = data_layout.create_data_layout(particles)
+        self.data_layout = data_layout.DataLayout(particles)
         self._data = numpy.zeros(self.data_layout.sim_size(), 
                                  dtype=numpy.float64)
         self._fresh_data = self._data.copy()
