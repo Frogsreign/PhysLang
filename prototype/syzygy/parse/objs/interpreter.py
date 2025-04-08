@@ -85,7 +85,7 @@ class Interpreter(object):
         force = {
             "name": self.forceCount,
             "in": statement.input.toDict(),
-            "force": statement.func.toString()        
+            "func": statement.func.toString()        
         }
         
         self.dictionary["forces"].append(force)
