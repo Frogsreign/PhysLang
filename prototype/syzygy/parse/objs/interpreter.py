@@ -13,6 +13,7 @@ class Interpreter(object):
       self.dictionary = {}
       self.dicts = []
       self.pointCount = 0
+      self.forceCount = 0
 
     def run(self):
         for statement in self.statements:
@@ -62,7 +63,7 @@ class Interpreter(object):
         properties = {
             "net-force": net_force,
             "pos": pos,
-            "mass": m,
+            "mass": "Infinity" if m == np.inf else m,
             "vel": vel,
             "acc": acc,
             "e_charge": e
@@ -81,20 +82,23 @@ class Interpreter(object):
 
     def interpretForce(self, statement):
 
-        func = self.interpretExpression(statement.func)
+        # Create a json dictionary to pass on to the force function handler
+        force = {
+            "name": self.forceCount,
+            "in": statement.input.toDict(),
+            "force": statement.func.toString()        
+        }
+        
+        self.dictionary.update({self.forceCount: force})
+        self.dicts.append(force)
+        print(force)
 
         
-
-
 
     def interpretBinary(self, expression):
         left = self.interpretExpression(expression.left)
         right = self.interpretExpression(expression.right)
         operator = expression.operator.type
-
-        # validate?
-
-        # also, comparisons would go here if those get added in
 
         if operator == PLUS: return left + right
         elif operator == MINUS: return left - right

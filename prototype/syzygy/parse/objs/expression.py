@@ -9,19 +9,28 @@ class CommaExpression(Expression):
     def toString(self):
         return self.left.toString() + ', ' + self.right.toString()
     
-class PeriodExpression(Expression):
-    def __init__(self, parent, child):
-        self.parent = parent
-        self.child = child
+    def toDict(self):
+        return [self.left.toDict(), self.right.toDict()]
+    
+# class PeriodExpression(Expression):
+#     def __init__(self, parent, child):
+#         self.parent = parent
+#         self.child = child
 
-    def toString(self):
-        return self.parent.toString() + "." + self.child.toString()
+#     def toString(self):
+#         return self.parent.toString() + "." + self.child.toString()
+    
+#     def toDict(self):
+#         return self.toString()
     
 class VariableExpression(Expression):
     def __init__(self, var):
         self.var = var
 
     def toString(self):
+        return self.var.text
+    
+    def toDict(self):
         return self.var.text
 
 class BinaryExpression(Expression):
@@ -32,7 +41,7 @@ class BinaryExpression(Expression):
     
     def toString(self):
         return self.left.toString() + self.operator.type + self.right.toString()
-
+    
 class UnaryExpression(Expression):
     def __init__(self, operator, right):
         self.operator = operator
@@ -40,20 +49,26 @@ class UnaryExpression(Expression):
     
     def toString(self):
         return self.operator.type + self.right.toString()
-
+    
 class LiteralExpression(Expression):
     def __init__(self, value):
         self.value = value
     
     def toString(self):
         return str(self.value)
-
+    
+    def toDict(self):
+        return self.value
+    
 class ParenthesesExpression(Expression):
     def __init__(self, expression):
         self.expression = expression
 
     def toString(self):
         return f"({self.expression.toString()})"
+    
+    def toDict(self):
+        return self.expression.toDict()
 
 class BracketExpression(Expression):
     def __init__(self, expression):
@@ -61,3 +76,7 @@ class BracketExpression(Expression):
     
     def toString(self):
         return f"[{self.expression.toString()}]"
+    
+    def toDict(self):
+        return self.expression.toDict()
+
