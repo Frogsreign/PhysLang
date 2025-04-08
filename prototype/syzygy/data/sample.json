@@ -1,1 +1,1 @@
-[{"name": 0, "properties": {"net-force": [0, 0, 0], "pos": [null, null, null], "mass": 1.0, "vel": [null, null, null], "acc": [null, null, null], "e_charge": 1.0}}]
+{"group-id": 0, "forces": {}, "update-rules": {}, "particles": {"0": {"name": 0, "properties": {"net-force": [0.0, 0.0, 0.0], "pos": [0.0, 0.0, 0.0], "mass": "Infinity", "vel": [0.0, 0.0, 0.0], "acc": [0.0, 0.0, 0.0], "e_charge": 0}}}}

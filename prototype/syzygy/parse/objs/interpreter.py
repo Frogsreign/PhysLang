@@ -10,8 +10,7 @@ import numpy as np
 class Interpreter(object):
     def __init__(self, statements):
       self.statements = statements
-      self.dictionary = {} # What will be output to the json file for animation
-      self.dicts = [] # Not output, internal list for structures
+      self.dictionary = {"group-id": 0, "forces": {}, "update-rules": {}, "particles": {}} # What will be output to the json file for animation
       self.pointCount = 0
       self.forceCount = 0
       self.updateCount = 0
@@ -76,9 +75,8 @@ class Interpreter(object):
             "properties": properties
         }
 
-        self.dictionary.update({self.pointCount: pointDict})
+        self.dictionary["particles"].update({self.pointCount: pointDict})
         self.pointCount += 1
-        self.dicts.append(pointDict)
         print(pointDict)
 
     def interpretForce(self, statement):
@@ -90,8 +88,7 @@ class Interpreter(object):
             "force": statement.func.toString()        
         }
         
-        self.dictionary.update({self.forceCount: force})
-        self.dicts.append(force)
+        self.dictionary["forces"].update({self.forceCount: force})
         print(force)
         self.forceCount += 1
 
@@ -101,8 +98,7 @@ class Interpreter(object):
             "name": self.updateCount,
         }
 
-        self.dictionary.update({self.updateCount: update})
-        self.dicts.append(update)
+        self.dictionary["update-rules"].update({self.updateCount: update})
         print(update)
         self.updateCount += 1
 
@@ -129,7 +125,7 @@ class Interpreter(object):
         return expression.value
 
     def interpretParentheses(self, expression):
-        return self.interpret(expression.expression)
+        return self.interpretExpression(expression.expression)
 
     # These two should always appear together and the result needs to return a numpy array
     def interpretComma(self, expression):

@@ -20,7 +20,7 @@ interpret = Interpreter(statements)
 interpret.run()
 
 with open("syzygy/data/sample.json", "w") as outfile:
-    json.dump(interpret.dicts, outfile)
+    json.dump(interpret.dictionary, outfile)
 
 # TODO: Configure the animation from the json file created
 # TODO: Streamline access and ability to run the main file w/ a file parameter
