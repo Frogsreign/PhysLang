@@ -19,7 +19,7 @@ for statement in statements:
 interpret = Interpreter(statements)
 interpret.run()
 
-with open("syzygy/data/sample.json", "w") as outfile:
+with open("tests/data/sample.json", "w") as outfile:
     json.dump(interpret.dictionary, outfile)
 
 # TODO: Configure the animation from the json file created
