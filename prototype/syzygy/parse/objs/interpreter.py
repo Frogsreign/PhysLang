@@ -71,7 +71,7 @@ class Interpreter(object):
 
         # Create the dictionary for the point
         pointDict = {
-            "id": self.pointCount, 
+            "name": self.pointCount, 
             "props": properties
         }
 
@@ -83,7 +83,7 @@ class Interpreter(object):
 
         # Create a json dictionary to pass on to the force function handler
         force = {
-            "id": self.forceCount,
+            "name": self.forceCount,
             "in": statement.input.toDict(),
             "force": statement.func.toString()        
         }
@@ -95,7 +95,7 @@ class Interpreter(object):
     def interpretUpdate(self, statement):
 
         update = {
-            "id": self.updateCount,
+            "name": self.updateCount,
         }
 
         self.dictionary["update-rules"].append(update)
