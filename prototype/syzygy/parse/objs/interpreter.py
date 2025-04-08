@@ -10,7 +10,7 @@ import numpy as np
 class Interpreter(object):
     def __init__(self, statements):
       self.statements = statements
-      self.dictionary = {"group-id": 0, "forces": {}, "update-rules": {}, "particles": {}} # What will be output to the json file for animation
+      self.dictionary = {"group-id": 0, "forces": [], "update-rules": [], "particles": []} # What will be output to the json file for animation
       self.pointCount = 0
       self.forceCount = 0
       self.updateCount = 0
@@ -71,11 +71,11 @@ class Interpreter(object):
 
         # Create the dictionary for the point
         pointDict = {
-            "name": self.pointCount, 
-            "properties": properties
+            "id": self.pointCount, 
+            "props": properties
         }
 
-        self.dictionary["particles"].update({self.pointCount: pointDict})
+        self.dictionary["particles"].append(pointDict)
         self.pointCount += 1
         print(pointDict)
 
@@ -83,22 +83,22 @@ class Interpreter(object):
 
         # Create a json dictionary to pass on to the force function handler
         force = {
-            "name": self.forceCount,
+            "id": self.forceCount,
             "in": statement.input.toDict(),
             "force": statement.func.toString()        
         }
         
-        self.dictionary["forces"].update({self.forceCount: force})
+        self.dictionary["forces"].append(force)
         print(force)
         self.forceCount += 1
 
     def interpretUpdate(self, statement):
 
         update = {
-            "name": self.updateCount,
+            "id": self.updateCount,
         }
 
-        self.dictionary["update-rules"].update({self.updateCount: update})
+        self.dictionary["update-rules"].append(update)
         print(update)
         self.updateCount += 1
 

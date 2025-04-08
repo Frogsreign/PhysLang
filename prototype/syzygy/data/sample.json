@@ -1,1 +1,1 @@
-{"group-id": 0, "forces": {}, "update-rules": {}, "particles": {"0": {"name": 0, "properties": {"net-force": [0.0, 0.0, 0.0], "pos": [0.0, 0.0, 0.0], "mass": "Infinity", "vel": [0.0, 0.0, 0.0], "acc": [0.0, 0.0, 0.0], "e_charge": 0}}}}
+{"group-id": 0, "forces": [{"id": 0, "in": ["a", "b"], "force": "(a+b)"}], "update-rules": [], "particles": []}
