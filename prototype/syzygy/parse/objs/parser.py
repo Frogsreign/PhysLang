@@ -73,13 +73,20 @@ class Parser(object):
         # force(function of p and q)
         # forces are all particle-particle interactions -> only p and q allowed as identifiers
 
+        input = None
         func = None
 
         self.consume(LEFT_PAREN, "Expected '(' after 'force'.")
-        func = self.expression(force=True)
-
+        self.consume(INPUT, "Expected 'input=' as first argument of point.")
+        self.consume(ASSIGN, "Expected 'input=' as first argument of point.")
+        input = self.expression()
+        self.consume(COMMA, "Second argument func required.")
+        self.consume(FUNC, "Second argument func required.")
+        self.consume(ASSIGN, "Expected 'func=' as second argument.")
+        func = self.expression()
         self.consume(RIGHT_PAREN, "Expected ')' to close force().")
-        return ForceStatement(func)
+        
+        return ForceStatement(input=input, func=func)
         
 
     # Expression management functions
@@ -88,7 +95,7 @@ class Parser(object):
     # Base tree; has an indicator (bracket) for if working with parameters
     def expression(self, bracket=False, force=False):
         if bracket: return self.comma()
-        if force: return self.period()
+        # if force: return self.period()
         return self.term()
     
     # Handles comma separated parameters/vector components
@@ -99,16 +106,16 @@ class Parser(object):
             expression = CommaExpression(expression, right)
         return expression
     
-    def period(self):
-        expression = self.term()
-        if isinstance(expression, VariableExpression):
-            if self.match(PERIOD):
-                child = self.term()
-                if isinstance(child, (POS, VEL, ACC, M, E)):
-                    expression = PeriodExpression(expression, child)
-                    print(expression.toString())
-                else: raise Exception("Non-attribute after text period.")
-        return expression
+    # def period(self):
+    #     expression = self.term()
+    #     if isinstance(expression, VariableExpression):
+    #         if self.match(PERIOD):
+    #             child = self.term()
+    #             if isinstance(child, (POS, VEL, ACC, M, E)):
+    #                 expression = PeriodExpression(expression, child)
+    #                 print(expression.toString())
+    #             else: raise Exception("Non-attribute after text period.")
+    #     return expression
 
     # Handles addition and subtraction terms
     def term(self):

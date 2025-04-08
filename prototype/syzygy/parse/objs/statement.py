@@ -49,13 +49,12 @@ class PointStatement(Statement):
 
 class ForceStatement(Statement):
     # Expects two object expressions (particles, particle groups) and a function expression
-    def __init__(self, objA, objB, func):
-        self.objA = objA
-        self.objB = objB
+    def __init__(self, input, func):
+        self.input = input
         self.func = func
 
     def toString(self):
-        return f"ObjA: {self.objA.toString()} ObjB: {self.objB.toString()} Func: {self.func.toString()}"
+        return f"Inputs: {self.input.toString()} Func: {self.func.toString()}"
 
 class UpdateStatement(Statement):
     # Not sure what to expect right now
