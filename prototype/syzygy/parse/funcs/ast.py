@@ -11,8 +11,6 @@
 #   (b) Expand dot products (using linearity rules)
 #   (c) Reduce dot products to 1-D algebra
 
-from syzygy.sim import data_layout
-
 
 # Helper-helper: Checks whether the current operator has lower precedence than 
 # the lowest precedence seen, and potentially updates it.

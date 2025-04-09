@@ -55,6 +55,7 @@ class Scanner(object):
         if token == None: token = self.getReservedToken()
         if token == None: 
             character = self.source[self.current]
+            print(character)
             raise Exception(f"Unexpected character {character} at position {self.current}.")
         
         return token
@@ -83,7 +84,7 @@ class Scanner(object):
         elif nextChar == '|': type = OR
         elif nextChar == '\n':
             type = IGNORE
-            line += 1
+            self.line += 1
         elif nextChar == ' ': type = IGNORE
         elif nextChar == '\t': type = IGNORE
         else: pass

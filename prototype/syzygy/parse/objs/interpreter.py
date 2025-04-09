@@ -1,3 +1,4 @@
+
 # imports
 from syzygy.parse.objs.tokens import *
 from syzygy.parse.objs.tokentype import *
@@ -10,10 +11,10 @@ import numpy as np
 class Interpreter(object):
     def __init__(self, statements):
       self.statements = statements
-      self.dictionary = {}
-      self.dicts = []
+      self.dictionary = {"group-id": 0, "forces": [], "update-rules": [], "particles": []} # What will be output to the json file for animation
       self.pointCount = 0
       self.forceCount = 0
+      self.updateCount = 0
 
     def run(self):
         for statement in self.statements:
@@ -72,12 +73,11 @@ class Interpreter(object):
         # Create the dictionary for the point
         pointDict = {
             "name": self.pointCount, 
-            "properties": properties
+            "props": properties
         }
 
-        self.dictionary.update({self.pointCount: pointDict})
+        self.dictionary["particles"].append(pointDict)
         self.pointCount += 1
-        self.dicts.append(pointDict)
         print(pointDict)
 
     def interpretForce(self, statement):
@@ -86,14 +86,22 @@ class Interpreter(object):
         force = {
             "name": self.forceCount,
             "in": statement.input.toDict(),
-            "force": statement.func.toString()        
+            "func": statement.func.toString()        
         }
         
-        self.dictionary.update({self.forceCount: force})
-        self.dicts.append(force)
+        self.dictionary["forces"].append(force)
         print(force)
+        self.forceCount += 1
 
-        
+    def interpretUpdate(self, statement):
+
+        update = {
+            "id": self.updateCount,
+        }
+
+        self.dictionary["update-rules"].append(update)
+        print(update)
+        self.updateCount += 1
 
     def interpretBinary(self, expression):
         left = self.interpretExpression(expression.left)
@@ -118,7 +126,7 @@ class Interpreter(object):
         return expression.value
 
     def interpretParentheses(self, expression):
-        return self.interpret(expression.expression)
+        return self.interpretExpression(expression.expression)
 
     # These two should always appear together and the result needs to return a numpy array
     def interpretComma(self, expression):
