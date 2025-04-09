@@ -1,4 +1,10 @@
 
+#
+# @author Jacob Leider
+#
+# This module is responsible for parsing an entire script; objects, functions 
+# and all.
+
 from syzygy.parse.funcs import lex
 from syzygy.parse.funcs import ast
 from syzygy.parse.objs import interpreter
@@ -23,7 +29,7 @@ def func_expr_to_ast(expr, metadata):
     func_ast  = ast.expand_dots(func_ast)
     # Expand dots into indexed sums
     func_ast = ast.collapse_dots(func_ast, metadata)
-    return ast
+    return func_ast
 
 
 def convert_force_to_ast(force, metadata):
@@ -42,17 +48,18 @@ def convert_update_rule_to_ast(update, metadata):
 
 def convert_funcs_to_asts(tree: dict):
     particles = get_particles(tree)
+    print(particles)
     metadata = data_layout.ParticleMetadata(particles)
 
-    for _, force in tree["forces"].items():
-        convert_force_to_ast(force, metadata)
+    for entry in tree["forces"]:
+        convert_force_to_ast(entry, metadata)
 
-    for _, update in tree["update-rules"].items():
-        convert_update_rule_to_ast(update, metadata)
+    for entry in tree["update-rules"]:
+        convert_update_rule_to_ast(entry, metadata)
 
 
 def build_entire_ast(script):
-    scan = scanner.Scanner(input)
+    scan = scanner.Scanner(script)
     # Lex
     tokens = scan.scan()
     # Parse
@@ -61,8 +68,7 @@ def build_entire_ast(script):
     # Convert to AST
     terp = interpreter.Interpreter(statements)
     terp.run()
+    print(terp.dictionary)
     # Convert functions to subtrees
-    try:
-        convert_funcs_to_asts(interpreter.tree)
-    except:
-        raise NotImplementedError("Tell Jonas that his interpreter needs a `tree` attribute that contains the AST.")
+    convert_funcs_to_asts(terp.dictionary)
+    return terp.dictionary

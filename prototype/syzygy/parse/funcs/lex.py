@@ -1,6 +1,6 @@
-import re
-import enum
-
+#
+# @author Jacob Leider
+#
 # DESCRIPTION ==================================================================
 #
 # This script implements a parser for algebraic expressions. The parser...
@@ -38,6 +38,10 @@ import enum
 #
 # ==============================================================================
 
+import re
+import enum
+
+
 class Token(enum.Enum):
   REF = enum.auto()
   LIT = enum.auto()
@@ -67,7 +71,7 @@ RX_RPAREN = re.compile(r"\)")
 RX_COMMA = re.compile(",")
 RX_NORM = re.compile("norm")
 RX_DOT = re.compile("dot")
-RX_TERM = re.compile("$")
+RX_TERM = re.compile(r"\$")
 
 
 # State transition table: Maps (state, input character, stack character) triples
@@ -124,6 +128,7 @@ def lex(s: str) -> list:
   """
   Convert a string to a token sequence.
   """
+  print(f"lexing {s}")
   tokens = []
   while s:
     token, s = match_and_step(s)

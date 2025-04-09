@@ -1,50 +1,50 @@
-# Order of events:
+# 
+# @author Jacob Leider
+#
+# Order of events
+# ---------------
 # 1. Lex
 # 2. Parse
-# 3. Build AST
-# 4. Expand dot products, norms
-#     * Converts norms to dot products
-# 5. Collapse dot products
+# 3. Build preliminary AST
+# 4.
+#   (a) Convert norms to radicals of dot products
+#   (b) Expand dot products (using linearity rules)
+#   (c) Reduce dot products to 1-D algebra
 
 from syzygy.sim import data_layout
 
-precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
-right_associative = {'^'}
 
-
-def find_comma(tokens):
-  for i in range(len(tokens)):
-    if tokens[i] == ',':
-      return i
-  return -1
-
-
-def update_min_precedence(tokens, cur_index, min_index, cur_precedence, min_precedence):
-  if (cur_precedence < min_precedence or
-      cur_precedence == min_precedence and
+# Helper-helper: Checks whether the current operator has lower precedence than 
+# the lowest precedence seen, and potentially updates it.
+def update_min_precedence(tokens, cur_index, lowest_precedence_seen_index, cur_precedence, 
+                          lowest_precedence_seen, precedence, right_associative):
+  if (cur_precedence < lowest_precedence_seen or
+      cur_precedence == lowest_precedence_seen and
       tokens[cur_index] not in right_associative):
     return cur_index, precedence[tokens[cur_index]]
   else:
-    return min_index, min_precedence
+    return lowest_precedence_seen_index, lowest_precedence_seen 
 
 
 # Helper: Finds the index of the operator with the lowest precedence
 # (respecting associativity)
-def min_precedence(tokens):
+def min_precedence(tokens, precedence, right_associative):
   depth = 0
-  min_index = -1
-  min_precedence = max(precedence.values())
+  lowest_precedence_seen_index = -1
+  lowest_precedence_seen = max(precedence.values())
   for i, token in enumerate(tokens):
     if token == '(':
       depth += 1
     elif token == ')':
       depth -= 1
     elif depth == 0 and token in precedence:
-      min_index, min_precedence = update_min_precedence(
-          tokens, i, min_index, precedence[token], min_precedence)
+      # Only update if we aren't inside any parentheses.
+      lowest_precedence_seen_index, lowest_precedence_seen = update_min_precedence(
+          tokens, i, lowest_precedence_seen_index, precedence[token], 
+          lowest_precedence_seen, precedence, right_associative)
     elif token in ("norm", "dot"):
       continue
-  return min_index
+  return lowest_precedence_seen_index 
 
 
 # NOTE: Leave variables in their own lists in case we find it helpful to provide
@@ -55,30 +55,36 @@ def tokens_to_ast(tokens):
 
   Example: "3 + 5 * 2 - 8 / 4" becomes `[-, [+, 3, [*, 5, 2]], [/, 8, 4]]`
   """
+  precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+  right_associative = {'^'}
+
   tree = []
   stack = [(tokens, tree)]
 
   while len(stack) > 0:
     tokens, root = stack.pop()
     if len(tokens) == 1:
+      # Leaf: Requires no further processing
       root.append(tokens[0])
     else:
-      min_precidence_index = min_precedence(tokens)
+      min_precidence_index = min_precedence(tokens, precedence, 
+                                            right_associative)
       if min_precidence_index == -1:
+        # Terminal expression or dot/norm
         if tokens[0] == 'norm':
           root.extend(['norm', []])
           stack.append((tokens[2:-1], root[1]))
         elif tokens[0] == 'dot':
-          comma_idx = find_comma(tokens)
-          if comma_idx == -1:
-            print(tokens)
-            raise Exception("Invalid dot expression")
+          comma_index = tokens.find(",")
+          if comma_index == -1:
+              raise Exception("Invalid dot expression: ", tokens)
           root.extend(['dot', [], []])
-          stack.append((tokens[2:comma_idx], root[1]))
-          stack.append((tokens[comma_idx+1:-1], root[2]))
+          stack.append((tokens[2:comma_index], root[1]))
+          stack.append((tokens[comma_index+1:-1], root[2]))
         else:
           stack.append((tokens[1:-1], root))
       else:
+        # Binary expression
         root.extend([tokens[min_precidence_index], [], []])
         stack.append((tokens[:min_precidence_index], root[1]))
         stack.append((tokens[min_precidence_index + 1:], root[2]))
@@ -87,7 +93,7 @@ def tokens_to_ast(tokens):
 
 
 def expand_dot_sum_left(sub, stack):
-  left = sub[1]
+  left = sub[1].copy()
   right = sub[2].copy()
   left_left = left[1]
   left_right = left[2]
@@ -108,6 +114,7 @@ def expand_dot_sum_right(sub, stack):
   sub[2] = ['dot', left, right_right]
 
 
+# Expand [dot, [*, c, a], b] -> [*, c, [dot, a, b]]
 def expand_dot_scalar_prod_left(sub, stack):
   left = sub[1].copy()
   right = sub[2].copy()
@@ -118,7 +125,7 @@ def expand_dot_scalar_prod_left(sub, stack):
   sub[1] = left_scalar
   sub[2] = ['dot', left_vector, right]
 
-
+# Expand [dot, a, [*, c, b]] -> [*, c, [dot, a, b]]
 def expand_dot_scalar_prod_right(sub, stack):
   left = sub[1].copy()
   right = sub[2].copy()
@@ -131,12 +138,12 @@ def expand_dot_scalar_prod_right(sub, stack):
 
 
 def expand_dot(sub, stack):
-  if len(sub[1]) == 3:
+  if len(sub[1]) == 3: # if left can be expanded
     child = sub[1]
     if child[0] == '*':           expand_dot_scalar_prod_left(sub, stack)
     elif child[0] == '/':         raise NotImplementedError()
     elif child[0] in ('+', '-'):  expand_dot_sum_left(sub, stack)
-  elif len(sub[2]) == 3:
+  elif len(sub[2]) == 3:  # if right can be expanded
     child = sub[2]
     if child[0] == '*':           expand_dot_scalar_prod_right(sub, stack)
     elif child[0] == '/':         raise NotImplementedError()
@@ -167,9 +174,21 @@ def expand_dots(tree):
 def collapse_dot(sub, a, b, n):
   sub.clear()
   for i in range(n - 1):
-    sub.extend(["+", ["*", [f"{a}.idx:{i}"], [f"{b}.idx:{i}"]], []])
+    sub.extend(["+", ["*", [f"{a}.index:{i}"], [f"{b}.index:{i}"]], []])
     sub = sub[2]
-  sub.extend(["*", [f"{a}.idx:{n - 1}"], [f"{b}.idx:{n - 1}"]])
+  sub.extend(["*", [f"{a}.index:{n - 1}"], [f"{b}.index:{n - 1}"]])
+
+
+# Validate before reducing to lower order logic.
+def maybe_collapse_dot(sub, particle_metadata):
+    prop_a, prop_b = sub[1][0], sub[2][0]
+    # Dimensionality check.
+    _, a_name = prop_a.split(".")
+    _, b_name = prop_b.split(".")
+    if particle_metadata.prop_size(a_name) != particle_metadata.prop_size(b_name):
+        raise ValueError("encountered a dot product between vectors of different dimensions")
+    # Checks passed.
+    collapse_dot(sub, prop_a, prop_b, particle_metadata.prop_size(a_name))
 
 
 def collapse_dots(tree, particle_metadata):
@@ -177,15 +196,7 @@ def collapse_dots(tree, particle_metadata):
   while len(stack) > 0:
     sub = stack.pop()
     if sub[0] == 'dot':
-      prop_a, prop_b = sub[1][0], sub[2][0]
-
-      # Make sure the properties have the same dimensionality
-      _, a_name = prop_a.split(".")
-      _, b_name = prop_b.split(".")
-      if particle_metadata.prop_size(a_name) != particle_metadata.prop_size(b_name):
-          raise ValueError("encountered a dot product between vectors of different dimensions")
-
-      collapse_dot(sub, prop_a, prop_b, particle_metadata.prop_size(a_name))
+        maybe_collapse_dot(sub, particle_metadata)
     else:
       stack.extend(sub[1:])
   return tree
