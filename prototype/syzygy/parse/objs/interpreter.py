@@ -24,6 +24,7 @@ class Interpreter(object):
 
         if isinstance(statement, PointStatement): self.interpretPoint(statement)
         elif isinstance(statement, ForceStatement): self.interpretForce(statement)
+        elif isinstance(statement, UpdateStatement): self.interpretUpdate(statement)
         # more branches for different types of statments
         else: pass
 
@@ -96,7 +97,10 @@ class Interpreter(object):
     def interpretUpdate(self, statement):
 
         update = {
-            "id": self.updateCount,
+            "name": self.updateCount,
+            "in": statement.input.toDict(),
+            "out": statement.output.toString(),
+            "func": statement.func.toString()
         }
 
         self.dictionary["update-rules"].append(update)

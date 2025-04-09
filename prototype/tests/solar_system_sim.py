@@ -18,7 +18,7 @@ SUN_TO_PLUTO_DISTANCE = 59064e8
 
 
 def create_solar_system():
-    planets_json_file = open("data/solar_system.json", "r")
+    planets_json_file = open("tests/data/solar_system.json", "r")
     objs = json.JSONDecoder().decode(planets_json_file.read())
     planets_json_file.close()
 

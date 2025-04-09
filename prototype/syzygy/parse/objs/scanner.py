@@ -26,6 +26,7 @@ class Scanner(object):
             'vel': VEL,
             'acc': ACC,
             'input': INPUT,
+            'output': OUTPUT,
             'func': FUNC,
             'm': M,
             'e': E
@@ -94,22 +95,7 @@ class Scanner(object):
             self.current += 1
             return Token(type, nextChar, self.line)
         else: return None
-
-    # def getPeriodToken(self):
-    #     nextChar = self.source[self.current]
-    #     type = UNDEFINED
-    #     if nextChar == '.':
-    #         if self.current == 0: return None # start of document, this must be a number
-    #         if self.current + 1 >= len(self.source): raise Exception("Unexpected '.'.") # end of document, this is rogue
-    #         if self.source[self.current + 1].isdigit() or self.source[self.current - 1].isdigit(): return None # this is actually a number
-    #         if not self.source[self.current + 1].isalpha(): raise Exception("Unexpected '.'.") # rogue period
-
-    #         # Ok we made it through all the filters. We know we have something like X.X, so we can call this a PERIOD
-    #         self.current += 1
-    #         type = PERIOD
-    #         return Token(PERIOD, ".", self.line)
-
-
+        
     def getComparisonToken(self):
         nextChar = self.source[self.current]
 

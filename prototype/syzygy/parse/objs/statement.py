@@ -57,6 +57,11 @@ class ForceStatement(Statement):
         return f"Inputs: {self.input.toString()} Func: {self.func.toString()}"
 
 class UpdateStatement(Statement):
-    # Not sure what to expect right now
-    def __init__(self):
-        pass
+    # Expects two object expressions (particles, particle groups) and a function expression
+    def __init__(self, input, output, func):
+        self.input = input
+        self.output = output
+        self.func = func
+
+    def toString(self):
+        return f"Inputs: {self.input.toString()} Outputs: {self.output.toString()} Func: {self.func.toString()}"

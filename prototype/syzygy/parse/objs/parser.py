@@ -28,10 +28,9 @@ class Parser(object):
     def statement(self):
         if self.match(POINT): return self.pointStatement()
         elif self.match(FORCE): return self.forceStatement()
+        elif self.match(UPDATE): return self.updateStatement()
         else: # Catch bad format
             raise Exception("Unexpected command.")
-        # elif self.match(FORCE): return self.forceStatement()
-        # elif self.match(UPDATE): return self.updateStatement()
 
     def pointStatement(self):
         # point(pos=X, vel=X, acc=X, m=X, e=X, name=X)
@@ -70,15 +69,15 @@ class Parser(object):
         return PointStatement(pos, vel=vel, acc=acc, m=m, e=e)
 
     def forceStatement(self):
-        # force(function of p and q)
-        # forces are all particle-particle interactions -> only p and q allowed as identifiers
+        # force(input=[a, b, etc.], func=(function of a, b, etc.))
+        # force statements provide their inputs and the function that calculates an output from them.
 
         input = None
         func = None
 
         self.consume(LEFT_PAREN, "Expected '(' after 'force'.")
-        self.consume(INPUT, "Expected 'input=' as first argument of point.")
-        self.consume(ASSIGN, "Expected 'input=' as first argument of point.")
+        self.consume(INPUT, "Expected 'input=' as first argument of force.")
+        self.consume(ASSIGN, "Expected 'input=' as first argument of force.")
         input = self.expression()
         self.consume(COMMA, "Second argument func required.")
         self.consume(FUNC, "Second argument func required.")
@@ -87,14 +86,38 @@ class Parser(object):
         self.consume(RIGHT_PAREN, "Expected ')' to close force().")
         
         return ForceStatement(input=input, func=func)
+    
+    def updateStatement(self):
+
+        input = None
+        output = None
+        func = None
+
+        self.consume(LEFT_PAREN, "Expected '(' after 'force'.")
+        self.consume(INPUT, "Expected 'input=' as first argument of update.")
+        self.consume(ASSIGN, "Expected 'input=' as first argument of update.")
+        input = self.expression()
+        self.consume(COMMA, "Expected 'output=' as second argument of update")
+        self.consume(OUTPUT, "Expected 'output=' as second argument of update")
+        self.consume(ASSIGN, "Expected 'output=' as second argument of update")
+        output = self.expression()
+        self.consume(COMMA, "Expected 'func=' as third argument of update")
+        self.consume(FUNC, "Expected 'func=' as third argument of update")
+        self.consume(ASSIGN, "Expected 'func=' as third argument of update.")
+        func = self.expression() 
+        self.consume(RIGHT_PAREN, "Expected ')' to close update().")
+
+
+        return UpdateStatement(input, output, func)
         
 
     # Expression management functions
     # Check for commas, terms, factors, unaries, primaries (bracket expressions mostly), and numbers/strings, in this order
 
-    # Base tree; has an indicator (bracket) for if working with parameters
-    def expression(self, bracket=False, force=False):
+    # Base tree; has an indicator (bracket) for if working with parameters and one for functions (as they are just handed off to the next step)
+    def expression(self, bracket=False, func=False):
         if bracket: return self.comma()
+
         # if force: return self.period()
         return self.term()
     
@@ -106,17 +129,6 @@ class Parser(object):
             expression = CommaExpression(expression, right)
         return expression
     
-    # def period(self):
-    #     expression = self.term()
-    #     if isinstance(expression, VariableExpression):
-    #         if self.match(PERIOD):
-    #             child = self.term()
-    #             if isinstance(child, (POS, VEL, ACC, M, E)):
-    #                 expression = PeriodExpression(expression, child)
-    #                 print(expression.toString())
-    #             else: raise Exception("Non-attribute after text period.")
-    #     return expression
-
     # Handles addition and subtraction terms
     def term(self):
         expression = self.factor() # next down the chain
