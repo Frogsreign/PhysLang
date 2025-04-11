@@ -9,16 +9,34 @@ import json
 
 class DataLayout:
     def __init__(self, particles_list):
-        self.particle_metadata = ParticleMetadata(particles_list)
+      self.particle_metadata = ParticleMetadata(particles_list)
+
 
     def idx_of(self, particle_name=None, prop_name=None, index=0):
-        idx = 0
-        if particle_name is not None:
-            idx += self.particle_metadata.particle_size * self.particle_metadata.particle_name_to_idx[particle_name]
-        if prop_name is not None:
-            idx += self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
-        idx += index
-        return idx
+      idx = 0
+      if particle_name is not None:
+        idx += self.particle_metadata.particle_size * self.particle_metadata.particle_name_to_idx[particle_name]
+      if prop_name is not None:
+        idx += self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
+      idx += index
+      return idx
+
+
+    def assign_list(self, particle_name, prop_name, prop_data, data):
+      for prop_idx, prop_val in enumerate(prop_data):
+        idx = self.idx_of(
+                particle_name, 
+                prop_name, 
+                prop_idx)
+        data[idx] = prop_val
+
+
+    def assign_element(self, particle_name, prop_name, prop_data, data):
+      idx = self.idx_of(
+              particle_name, 
+              prop_name)
+      data[idx] = prop_data
+
 
     def init_data(self, data, particles):
         """
@@ -30,27 +48,23 @@ class DataLayout:
             for prop_name, prop_data in particle_data.items():
                 prop_size = self.prop_size(prop_name)
                 if prop_size == 1:
-                    idx = self.idx_of(
-                            particle_name, 
-                            prop_name)
-                    data[idx] = prop_data
+                    self.assign_element(particle_name, prop_name, prop_data, data)
                 elif prop_size > 1:
-                    for prop_idx, prop_val in enumerate(prop_data):
-                        idx = self.idx_of(
-                                particle_name, 
-                                prop_name, 
-                                prop_idx)
-                        data[idx] = prop_val
+                    self.assign_list(particle_name, prop_name, prop_data, data)
+               
 
     def idx_as_str(self, particle_id="obj", prop_name=None, index=0):
         idx = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]] + index
         return f"{idx} + {particle_id} * {self.particle_size()}"    
 
+
     def prop_offset(self, prop_name) -> int:
         return self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
 
+
     def prop_size(self, prop_name) -> int:
         return self.particle_metadata.prop_sizes[self.particle_metadata.prop_name_to_idx[prop_name]]
+
 
     def prop_idx_all_particles(self, prop_name):
         prop_offset = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
@@ -60,14 +74,18 @@ class DataLayout:
             for i in range(self.num_particles())])
         return out
 
+
     def num_particles(self) -> int:
         return self.particle_metadata.num_particles
+
 
     def particle_size(self):
         return self.particle_metadata.particle_size
 
+
     def sim_dim(self) -> int:
         return self.prop_size("pos")
+
 
     def sim_size(self):
         return self.particle_size() * self.num_particles()
@@ -93,6 +111,7 @@ class ParticleMetadata:
         self.prop_sizes.append(pos_size)
         self.prop_offsets.append(particle_size_without_net_force)
         self.particle_size = particle_size_without_net_force + pos_size
+
 
     def prop_size(self, prop: int | str):
         if isinstance(prop, int):

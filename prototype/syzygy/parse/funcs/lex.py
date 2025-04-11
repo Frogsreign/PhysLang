@@ -1,40 +1,53 @@
 #
 # @author Jacob Leider
 #
-# DESCRIPTION ==================================================================
+# BREIF DESCRIPTION ==================================================================
 #
 # This script implements a parser for algebraic expressions. The parser...
+#
 #     * Validates expressions.
 #     * (Optionally) Calls a function at each state the PDA transitions into.
 #
 # DETAILED DESCRIPTION =========================================================
 #
-# The set of acceptable expressions for force/update functions is not a regular
-# language, it is at best a CFG. The following is a PDA that accepts strings in
-# the language of force/update function definitions.
-#
 # If you don't know any formal language theory, learn what a PDA is:
+#
 #     * https://en.wikipedia.org/wiki/Pushdown_automaton
 #
-# Defning the CFG
+# The formal language of acceptable expressions for force/update functions a 
+# context free grammar (CFG). There exists a unique pushdown automaton (PDA) 
+# that accepts strings in this language. This module attempts to construct 
+# this PDA. 
+# 
+# To simplify things, we actually define generate the character set of the 
+# language of functions by tokenizing using regular expressions.
+#
+# The PDA is defined as follows:
+#
 #     * Alphabet
-#         * [a-z], [0-9], (), +-*/^, "."
-#     * Terminal Expressions
-#         * Property access (REF)
-#         * Lieral (LIT)
-#         * Operand (OP)
-#     * Production rules
-#         * A -> A OP A
-#         * A -> (A)
-#         * A -> REF
-#         * A -> LIT
-#     * States set
+#
+#         * Property access     (REF)
+#         * Lieral              (LIT)
+#         * Operand             (OP)
+#         * Left Parehtesis     (LPAREN)
+#         * Right Parehtesis    (RPAREN)
+#         * Terminal Expression (TERM)
+#         * Norm                (NORM)
+#         * Dot Product         j(DOT)
+#         * Comma               (COMMA)
+#
+#     * State set
+#
 #         * 0: Requires the next token not to be an operand or RPAREN.
-#         * 1: Next token may be an operand or RPAREN, cannot be a LIT or REF
-#     * Aditional Notes
-#         * Stack doesn't distinguish between a reference and a literal.
-#         * This PDA is possibly incomplete. I didn't use any mathematical
-#           software to derive it.
+#         * 1: Next token may be an operand or RPAREN, cannot be a LIT or reference
+#
+#     * Accepting State: State.ACC
+#
+# Aditional Notes
+#
+#     * Stack doesn't distinguish between a reference and a literal.
+#     * This PDA is possibly incomplete. I didn't use any mathematical
+#       software to derive it. Feel free to upgrade this.
 #
 # ==============================================================================
 
@@ -53,9 +66,11 @@ class Token(enum.Enum):
   DOT = enum.auto()
   COMMA = enum.auto()
 
+
 class StackToken(enum.Enum):
   LPAREN = enum.auto()
   TERM = enum.auto()
+
 
 class State(enum.Enum):
   ACC = enum.auto()

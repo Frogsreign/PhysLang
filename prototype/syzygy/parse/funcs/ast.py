@@ -13,23 +13,23 @@
 
 
 # Helper-helper: Checks whether the current operator has lower precedence than 
-# the lowest precedence seen, and potentially updates it.
-def update_min_precedence(tokens, cur_index, lowest_precedence_seen_index, cur_precedence, 
-                          lowest_precedence_seen, precedence, right_associative):
-  if (cur_precedence < lowest_precedence_seen or
-      cur_precedence == lowest_precedence_seen and
+# the token of least precedence so far seen, and potentially updates it.
+def update_min_precedence(tokens, cur_index, least_precedence_seen_index, cur_precedence, 
+                          least_precedence_seen, precedence, right_associative):
+  if (cur_precedence < least_precedence_seen or
+      cur_precedence == least_precedence_seen and
       tokens[cur_index] not in right_associative):
     return cur_index, precedence[tokens[cur_index]]
   else:
-    return lowest_precedence_seen_index, lowest_precedence_seen 
+    return least_precedence_seen_index, least_precedence_seen 
 
 
-# Helper: Finds the index of the operator with the lowest precedence
+# Helper: Finds the index of the operator with the least precedence
 # (respecting associativity)
 def min_precedence(tokens, precedence, right_associative):
   depth = 0
-  lowest_precedence_seen_index = -1
-  lowest_precedence_seen = max(precedence.values())
+  least_precedence_seen_index = -1
+  least_precedence_seen = max(precedence.values())
   for i, token in enumerate(tokens):
     if token == '(':
       depth += 1
@@ -37,12 +37,12 @@ def min_precedence(tokens, precedence, right_associative):
       depth -= 1
     elif depth == 0 and token in precedence:
       # Only update if we aren't inside any parentheses.
-      lowest_precedence_seen_index, lowest_precedence_seen = update_min_precedence(
-          tokens, i, lowest_precedence_seen_index, precedence[token], 
-          lowest_precedence_seen, precedence, right_associative)
+      least_precedence_seen_index, least_precedence_seen = update_min_precedence(
+          tokens, i, least_precedence_seen_index, precedence[token], 
+          least_precedence_seen, precedence, right_associative)
     elif token in ("norm", "dot"):
       continue
-  return lowest_precedence_seen_index 
+  return least_precedence_seen_index 
 
 
 # NOTE: Leave variables in their own lists in case we find it helpful to provide
@@ -50,6 +50,8 @@ def min_precedence(tokens, precedence, right_associative):
 def tokens_to_ast(tokens):
   """
   Converts a validated expression into an AST.
+
+  Recursively builds the AST. 
 
   Example: "3 + 5 * 2 - 8 / 4" becomes `[-, [+, 3, [*, 5, 2]], [/, 8, 4]]`
   """
@@ -65,7 +67,7 @@ def tokens_to_ast(tokens):
       # Leaf: Requires no further processing
       root.append(tokens[0])
     else:
-      min_precidence_index = min_precedence(tokens, precedence, 
+      min_precidence_index = min_precedence(tokens, precedence,
                                             right_associative)
       if min_precidence_index == -1:
         # Terminal expression or dot/norm
