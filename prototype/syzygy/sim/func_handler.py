@@ -9,7 +9,6 @@
 
 
 from syzygy.compile import compile3
-from syzygy.syntax import vars 
 
 
 class FuncHandler:

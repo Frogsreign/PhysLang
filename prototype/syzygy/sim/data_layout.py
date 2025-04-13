@@ -10,6 +10,7 @@
 import numpy
 import json
 
+
 class DataLayout:
     def __init__(self, particles_list):
       self.particle_metadata = ParticleMetadata(particles_list)
@@ -49,6 +50,7 @@ class DataLayout:
             elif prop_size > 1:
               self.assign_list(particle_name, prop_name, prop_data, data)
 
+
     def idx_as_str(self, particle_id="A", prop_name="pos", index=0):
         idx = self.prop_offset(prop_name) + index
         return f"{idx} + {particle_id} * {self.particle_size()}"
@@ -56,6 +58,7 @@ class DataLayout:
 
     def prop_offset(self, prop: str | int) -> int:
         return self.particle_metadata.prop_offset(prop)
+
 
     def prop_size(self, prop: str | int) -> int:
         return self.particle_metadata.prop_size(prop)
@@ -109,11 +112,10 @@ class ParticleMetadata:
         self.prop_name_to_idx["net-force"] = net_force_idx
         self.prop_names.append("net-force")
         self.prop_sizes.append(pos_size)
-
         #for i, name in enumerate(self.prop_names): print(f"\t{i}) {name}: {self.prop_sizes[self.prop_name_to_idx[name]]}")
-
         self.prop_offsets.append(particle_size_without_net_force)
         self.particle_size = particle_size_without_net_force + pos_size
+
 
     def prop_size(self, prop: int | str):
         if isinstance(prop, int):
@@ -121,13 +123,12 @@ class ParticleMetadata:
         elif isinstance(prop, str):
             return self.prop_sizes[self.prop_name_to_idx[prop]]
 
+
     def prop_offset(self, prop: int | str):
         if isinstance(prop, int):
             return self.prop_offsets[prop]
         elif isinstance(prop, str):
             return self.prop_offsets[self.prop_name_to_idx[prop]]
-
-
 
 
 def create_data_layout(particles_list):

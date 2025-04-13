@@ -1,19 +1,21 @@
 #
 # @author Jacob Leider
 #
+# A `SimState` instance is constructed from a parse-tree with three main 
+# branches: particles, forces, and update rules. `SimState` utilizes helper
+# classes to organize and flatten the simulation data, and to compile the 
+# functions and map functions to their outputs. Specifically,
+#
+#   * `DataLayout` handles the particles
+#   * `FuncHandler` handles the functions (forces and update rules)
+#
+
 
 import numpy
-import time
-
 from syzygy.parse import parse
 from syzygy.sim import data_layout
 from syzygy.sim import func_handler
 
-# Ignore the long schematic comments.
-
-# JSON Standards:
-#   https://datatracker.ietf.org/doc/html/rfc7159.html
-#   https://ecma-international.org/publications-and-standards/standards/ecma-404/
 
 class SimState:
     def __init__(self, particles: list, forces: list, update_rules: list):
@@ -52,9 +54,6 @@ class SimState:
         """
         particle_size = self.data_layout.particle_size()
         num_particles = self.data_layout.num_particles()
-
-
-
 
 
         # Step `steps` times.
@@ -116,6 +115,7 @@ class SimState:
         return self._data
 
 
+# FIXME: This should probably move.
 def create_simulation(script):
     ast_builder = parse.AstBuilder()
     tree = ast_builder.build_entire_ast(script)

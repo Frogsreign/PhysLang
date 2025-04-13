@@ -6,7 +6,6 @@
 #
 
 import lark
-import json
 import random
 import string
 
@@ -32,9 +31,8 @@ def format_binary_associative(leftexpr, rightexpr, op):
     return f"({leftexpr}) {op} ({rightexpr})"
 
 
-
+# Compiles functions to python lambdas.
 class SyzygyFunctionCompiler(lark.Visitor):
-
     def __init__(self, compiler_options):
         self.compiler_options = compiler_options
 
@@ -160,7 +158,5 @@ def compile_tree(
 
     # Create function signature ----------------------------------------
     func_name, func_code = format_function_definition(syntax_tree.expr, options)
-
-    #print(func_code)
 
     return func_name, func_code
