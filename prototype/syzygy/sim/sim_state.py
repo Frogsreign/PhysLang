@@ -1,6 +1,11 @@
+#
+# @author Jacob Leider
+#
+
 import numpy
 import time
 
+from syzygy.parse import parse
 from syzygy.sim import data_layout
 from syzygy.sim import func_handler
 
@@ -13,14 +18,14 @@ from syzygy.sim import func_handler
 class SimState:
     def __init__(self, particles: list, forces: list, update_rules: list):
         self.data_layout = data_layout.DataLayout(particles)
-        self._data = numpy.zeros(self.data_layout.sim_size(), 
+        self._data = numpy.zeros(self.data_layout.sim_size(),
                                  dtype=numpy.float64)
         self._fresh_data = self._data.copy()
         self.data_layout.init_data(self._data, particles)
         # Empty data buffer.
         # Initialize forces and update rules.
-        self.func_handler = func_handler.FuncHandler(forces, 
-                                                     update_rules, 
+        self.func_handler = func_handler.FuncHandler(forces,
+                                                     update_rules,
                                                      self.data_layout)
 
 
@@ -47,6 +52,10 @@ class SimState:
         """
         particle_size = self.data_layout.particle_size()
         num_particles = self.data_layout.num_particles()
+
+
+
+
 
         # Step `steps` times.
         for _ in range(steps):
@@ -105,3 +114,9 @@ class SimState:
 
     def data(self):
         return self._data
+
+
+def create_simulation(script):
+    tree = parse.build_entire_ast(script)
+    state = SimState(tree["particles"], tree["forces"], tree["update-rules"])
+    return state

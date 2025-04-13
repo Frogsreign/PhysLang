@@ -1,15 +1,18 @@
 #!/usr/bin/python3
-
-from syzygy.compile import compile2
-from syzygy.syntax import vars 
-
+#
+# @author Jacob Leider
+#
+#
 # A helper class for the SimState class. FuncHandler compiles functions (forces 
 # and updates) and maps functions to their output objects in the global data 
 # array.
 
 
-class FuncHandler:
+from syzygy.compile import compile3
+from syzygy.syntax import vars 
 
+
+class FuncHandler:
     def __init__(self, forces, update_rules, data_layout):
         self.process_forces(forces, data_layout)
         self.process_update_rules(update_rules, data_layout)
@@ -31,7 +34,7 @@ class FuncHandler:
         compiler_options = {
             "variables_predefined": True,
             "output_lang": "py",
-            "variables": ["obj1", "obj2", "data"],
+            "variables": ["A", "B", "data"],
             "var_name_mapper": var_converter
         }
 
@@ -54,16 +57,17 @@ class FuncHandler:
                 return "dt"
             else:
                 _, prop_name, prop_idx = vars.parse_var(ast_var_name)
+                #print("PARSED VAR: ", _, prop_name, prop_idx)
                 return f"data[{data_layout.idx_as_str(prop_name=prop_name, index=prop_idx)}]"
                     
         compiler_options = {
             "variables_predefined": True,
-            "variables": ["obj", "dt", "data"],
+            "variables": ["A", "dt", "data"],
             "output_lang": "py",
             "var_name_mapper": var_converter
         }
         
-        self._compile_forces(update_rules, update_rule_names, 
+        self._compile_update_rules(update_rules, update_rule_names, 
                                    update_rule_funcs, update_rule_outps,
                                    compiler_options, data_layout)
 
@@ -76,31 +80,33 @@ class FuncHandler:
     def _compile_forces(self, force_entries, force_names, force_funcs, 
                        force_outps, compiler_options, data_layout):
         # Compile all forces.
-        for force_name, force_entry in force_entries.items():
-            compiler_options["func_name"] = force_name
-            self._compile_force(force_entry["func"], compiler_options, 
+        for entry in force_entries:
+            compiler_options["func_name"] = entry["name"]
+            self._compile_force(entry["func"], compiler_options, 
                                force_names, force_funcs)
             # Assign force to an output variable (net-force).
-            self.set_outp(force_entry, force_outps, data_layout)
+            print("FORCE")
+            self.set_outp(entry, force_outps, data_layout)
 
 
     def _compile_update_rules(self, update_rules, update_rule_names, 
                              update_rule_funcs, update_rule_outps, 
                              compiler_options, data_layout):
         # Compile all update_rules.
-        for update_rule_name, update_rule_entry in update_rules.items():
+        for entry in update_rules:
             # Compile.
-            compiler_options["func_name"] = update_rule_name
-            self._compile_update_rule(update_rule_entry["func"], 
+            compiler_options["func_name"] = entry["name"]
+            self._compile_update_rule(entry["func"], 
                                       compiler_options, 
                                       update_rule_names, 
                                       update_rule_funcs)
-            self.set_outp(update_rule_entry, update_rule_outps, data_layout)
+            print("UPDATE")
+            self.set_outp(entry, update_rule_outps, data_layout)
 
 
     def _compile_force(self, force_code, compiler_options, force_names, force_funcs):
             # Compile.
-            force_name, force_func = compile2.compile_tree(force_code,
+            force_name, force_func = compile3.compile_tree(force_code,
                     compiler_options=compiler_options)
             # Append to lists.
             force_names.append(force_name)
@@ -110,7 +116,7 @@ class FuncHandler:
     def _compile_update_rule(self, update_rule_code, compiler_options,
                              update_rule_names, update_rule_funcs):
             # Compile.
-            update_rule_name, update_rule_func = compile2.compile_tree(
+            update_rule_name, update_rule_func = compile3.compile_tree(
                     update_rule_code, compiler_options=compiler_options)
             # Append to lists.
             update_rule_names.append(update_rule_name)
@@ -118,6 +124,9 @@ class FuncHandler:
 
 
     def set_outp(self, update_rule_entry, update_rule_outps, data_layout):
+        for k, v in update_rule_entry.items():
+            if k != "func":
+                print(f"    {k}: {v}")
         _, prop_name, prop_idx = vars.parse_var(update_rule_entry["out"])
         update_rule_outps.append(data_layout.idx_of(
             prop_name=prop_name, index=prop_idx))

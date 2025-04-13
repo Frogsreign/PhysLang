@@ -1,0 +1,6 @@
+%import common.INT
+%import common.WORD
+
+!variable_name: WORD [("-" | _alphanumeric)*] // keep the underscores (!)
+
+_alphanumeric: [(INT | WORD)*]

@@ -10,13 +10,15 @@ def parse_var_index(ast_var_index):
     return int(fields[1])
 
 def parse_var(ast_var) -> tuple[str, str, int]:
-    fields = ast_var.split(".")
-    if len(fields) == 2:
-        return fields[0], fields[1], 0
-    elif len(fields) == 3:
-        return fields[0], fields[1], parse_var_index(fields[2])
+    particle_name, prop_name = ast_var.split(".")
+    
+    if prop_name.endswith("]"):
+        prop_name = prop_name[:-1]
+        prop_name, prop_idx = prop_name.split("[")
     else:
-        raise SyntaxError("AST variables must be of the form \"<obj>.<prop>[.idx:<index>]\"")
-        
+        prop_idx = 0
+
+    return particle_name, prop_name, int(prop_idx)
+
 
 

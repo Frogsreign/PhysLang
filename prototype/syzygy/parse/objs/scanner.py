@@ -55,6 +55,7 @@ class Scanner(object):
         if token == None: token = self.getNumericToken()
         if token == None: token = self.getReservedToken()
         if token == None: 
+            print(self.source[self.current:])
             character = self.source[self.current]
             print(character)
             raise Exception(f"Unexpected character {character} at position {self.current}.")

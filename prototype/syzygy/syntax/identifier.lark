@@ -1,0 +1,13 @@
+%import .var.variable_name -> _variable_name
+%import common.INT
+
+identifier: particle_name "." prop_name [prop_index]
+  | keyword
+
+particle_name: _variable_name
+
+prop_name: _variable_name
+
+prop_index: "[" INT "]"
+
+keyword: "dt"

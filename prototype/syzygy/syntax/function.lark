@@ -1,0 +1,48 @@
+// Imports
+%import .identifier.identifier
+%import .literal.literal
+%import common.WS
+%ignore WS
+
+// Order of operations
+start: expr
+
+?expr: term // almost always inline
+    | add
+    | sub
+
+?term: factor // `term` to match the Jonas-syntax
+    | mul
+    | div
+
+?factor: literal
+    | identifier
+    | builtin
+    | pow
+    | "(" expr ")"
+
+
+?builtin: dot
+  | norm
+  | abs
+
+
+// Binary operations
+add: expr "+" term
+
+sub: expr "-" term
+
+mul: term "*" factor
+
+div: term "/" factor
+
+pow: term "^" factor
+
+dot: "dot(" expr "," expr ")"
+    | "<" expr "," expr ">" // inner product notation
+
+
+// Unary operators
+norm: "norm(" expr ")"
+
+abs: "abs(" expr ")"

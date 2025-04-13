@@ -1,12 +1,13 @@
 #
 # @author Jacob Leider
 #
-# BREIF DESCRIPTION ==================================================================
+# BREIF DESCRIPTION ============================================================
 #
-# This script implements a parser for algebraic expressions. The parser...
+# This script implements a lexer and parser for syzygy functions (forces, 
+# updates).
 #
-#     * Validates expressions.
-#     * (Optionally) Calls a function at each state the PDA transitions into.
+#     * Converts a script into a sequence of tokens
+#     * Validates a token sequence
 #
 # DETAILED DESCRIPTION =========================================================
 #
@@ -51,8 +52,224 @@
 #
 # ==============================================================================
 
+import os
+import copy
+
+from numpy import prod
+import lark
 import re
 import enum
+
+# Extended Backus-Naur Form: 
+# Precedence based: ^, *, /, +, -
+# Left-associative
+
+
+FUNC_GRAMMAR_PATH = "../../syntax/function.lark"
+
+
+func_parser = lark.Lark.open(FUNC_GRAMMAR_PATH, rel_to=__file__, strict=False)
+
+# Concatenate names.
+class MergeIds(lark.Visitor):
+    def identifier__particle_name(self, tree):
+        concat_child = "".join([child for child in tree.children])
+        tree.children = [concat_child]
+
+    def identifier__prop_name(self, tree):
+        concat_child = "".join([child for child in tree.children])
+        tree.children = [concat_child]
+
+
+# Expand `norm(a)` to `dot(a, a)^0.5`
+# VISIT BOTTOM UP (default visit)
+class NormToDotConverter(lark.Visitor):
+    def norm(self, tree):
+        child = tree.children[0]
+        if tree.convert_to_abs:
+            tree.data = "abs"
+        else:
+            dot_tree = lark.Tree("dot", [child, child])
+            exp_tree = lark.Tree("literal", [1/2])
+            tree.data = "pow"
+            tree.children = [dot_tree, exp_tree]
+
+
+# VISIT BOTTOM UP (default visit) 
+class DimensionAnnotator(lark.Visitor):
+    def literal(self, tree):
+        tree.dimension = 1
+
+    def add(self, tree):
+        left, right = tree.children
+        if left.dimension != right.dimension:
+            raise Exception("Invalid expression: cannot add terms with different dimensionality")
+        tree.dimension = left.dimension
+
+    def sub(self, tree):
+        left, right = tree.children
+        if left.dimension != right.dimension:
+            raise Exception("Invalid expression: cannot subtract terms with different dimensionality")
+        tree.dimension = left.dimension
+
+    def mul(self, tree):
+        left, right = tree.children
+        if (left.dimension != 1) and (right.dimension != 1):
+            raise Exception(f"Invalid expression: cannot multiply two non-scalar terms dim = {left.dimension} and dim = {right.dimension}")
+
+        # Assert left operand is a scalar.
+        if (left.dimension != 1) and (right.dimension == 1):
+            tree.children = [right, left]
+
+        tree.dimension = right.dimension
+
+    def div(self, tree):
+        left, right = tree.children
+        if right.dimension != 1:
+            raise Exception("Invalid expression: cannot divide by a non-scalar")
+
+        tree.dimension = left.dimension
+
+    def pow(self, tree):
+        left, right = tree.children
+        if (left.dimension != 1) or (right.dimension != 1):
+            raise Exception("Invalid expression: cannot exponentiate a non-scalar factor, or raise a factor to a non-scalar power")
+        tree.dimension = 1
+
+
+    def dot(self, tree):
+        left, right = tree.children
+        if left.dimension != right.dimension:
+            raise Exception("Invalid expression: cannot take an inner product of elements of different dimensionalities.")
+        tree.dimension = 1
+
+
+    def norm(self, tree):
+        tree.dimension = 1
+        tree.convert_to_abs = (tree.children[0].dimension == 1)
+        print("convert to abs? ", tree.convert_to_abs)
+
+
+    def identifier(self, tree):
+        particle_name, prop_name, prop_index = tree.children
+        prop_name = prop_name.children[0]
+        if prop_index is not None:
+            tree.dimension = 1
+        else:
+            if prop_name not in self.particle_metadata:
+                raise Exception(f"Add \"{prop_name}\" to metadata")
+            tree.dimension = self.particle_metadata[prop_name]
+
+
+# VISIT TOPDOWN
+class DotExpander(lark.Visitor):
+
+    def dot(self, tree):
+      if len(tree.children) != 2:
+          print(f"Dot has {len(self.children)} children!!")
+
+      left, right = tree.children
+
+      if isinstance(left, lark.Tree):
+        if left.data in ("add", "sub"):
+          ll, lr = left.children
+          tree.data = left.data
+          tree.children = [lark.Tree("dot", [ll, right]), lark.Tree("dot", [lr, right])]
+        elif left.data == "mul":
+          scalar, vector = left.children
+          tree.data = "mul"
+          tree.children = [scalar, lark.Tree("dot", [vector, right])]
+        elif left.data == "div":
+          vector, scalar = left.children
+          tree.data = "div"
+          tree.children = [lark.Tree("dot", [vector, right]), scalar]
+
+      if isinstance(right, lark.Tree):
+        if right.data in ("add", "sub"):
+          rl, rr = right.children
+          tree.data = right.data
+          tree.children = [lark.Tree("dot", [left, rl]), lark.Tree("dot", [left, rr])]
+        elif right.data == "mul":
+          scalar, vector = right.children
+          tree.data = "mul"
+          tree.children = [scalar, lark.Tree("dot", [left, vector])]
+        elif left.data == "div":
+          vector, scalar = right.children
+          tree.data = "div"
+          tree.children = [lark.Tree("dot", [left, vector]), scalar]
+
+
+def approve_dot_to_scalar_conversion(tree):
+    left, right = tree.children
+    if not isinstance(left, lark.Tree):
+        return False
+    if not isinstance(right, lark.Tree):
+        return False
+    if left.data not in ("literal", "identifier"):
+        return False
+    if right.data not in ("literal", "identifier"):
+        return False
+    return True
+
+
+def copy_with_index(tree, i):
+    cp = copy.deepcopy(tree) # This tree should have 2 terminal children, so deepcopy is acceptable.
+    cp.children[0].children[2] = lark.Tree("identifier__prop_index", [i])
+    cp.children[1].children[2] = lark.Tree("identifier__prop_index", [i])
+    cp.dimension = 1
+    return cp
+
+
+# Only call AFTER `DotExpander`
+class DotToScalarConverter(lark.Visitor):
+    def dot(self, tree):
+        dim = tree.children[0].dimension
+        if not approve_dot_to_scalar_conversion(tree):
+            raise Exception("Cannot convert dot product to real arithmetic")
+        prod = copy_with_index(tree, 0)
+        prod.data = "mul"
+        # Build out the sum.
+        tree.data = "add"
+        tree.children = [prod]
+        curr = tree
+        for i in range(dim - 1):
+            cp = copy_with_index(prod, i + 1)
+            curr.children.append(lark.Tree("add", [cp]))
+            curr = curr.children[1]
+
+
+          
+def try_lex(s: str):
+  tree = func_parser.parse(s)
+
+  MergeIds().visit(tree)
+  print(tree.pretty())
+
+  print("TRANSFORMATION 2: ANNOTATING DIMENSIONS")
+
+  dimension_annotator = DimensionAnnotator()
+  dimension_annotator.particle_metadata = {
+          "pos_123_p": 3,
+          "pos": 3,
+          "vel": 3,
+          "acc": 3,
+          "mass": 1,
+  }
+
+  dimension_annotator.visit(tree)
+  print(tree.pretty())
+
+  print("TRANSFORMATION 3: EXPANDING NORMS")
+  NormToDotConverter().visit(tree)
+  print(tree.pretty())
+
+  print("TRANSFORMATION 4: EXPANDING DOTS")
+  DotExpander().visit_topdown(tree)
+  print(tree.pretty())
+
+  print("TRANSFORMATION 5: COLLAPSING DOTS")
+  DotToScalarConverter().visit_topdown(tree)
+  print(tree.pretty())
 
 
 class Token(enum.Enum):
@@ -101,7 +318,29 @@ transitions = {
     (1, Token.RPAREN, StackToken.LPAREN):  [1, True, None],
     (1, Token.OP, StackToken.TERM):        [0, False, None],
     (1, Token.OP, StackToken.LPAREN):      [0, False, None],
-    (1, Token.TERM, StackToken.TERM):      [State.ACC, False, None]
+    (1, Token.TERM, StackToken.TERM):      [State.ACC, False, None],
+    # Norm
+    (0, Token.NORM, StackToken.LPAREN):     [2, False, None],
+    (2, Token.LPAREN, StackToken.LPAREN):     [3, False, None],
+    (3, Token.REF, StackToken.LPAREN):     [4, False, None],
+    (4, Token.RPAREN, StackToken.LPAREN):     [1, False, None],
+    (0, Token.NORM, StackToken.TERM):     [2, False, None],
+    (2, Token.LPAREN, StackToken.TERM):     [3, False, None],
+    (3, Token.REF, StackToken.TERM):     [4, False, None],
+    (4, Token.RPAREN, StackToken.TERM):     [1, False, None],
+    # Dot
+    (0, Token.DOT, StackToken.LPAREN):     [5, False, None],
+    (5, Token.LPAREN, StackToken.LPAREN):     [6, False, None],
+    (6, Token.REF, StackToken.LPAREN):     [7, False, None],
+    (7, Token.COMMA, StackToken.LPAREN):     [8, False, None],
+    (8, Token.REF, StackToken.LPAREN):     [9, False, None],
+    (9, Token.RPAREN, StackToken.LPAREN):     [1, False, None],
+    (0, Token.DOT, StackToken.TERM):     [5, False, None],
+    (5, Token.LPAREN, StackToken.TERM):     [6, False, None],
+    (6, Token.REF, StackToken.TERM):     [7, False, None],
+    (7, Token.COMMA, StackToken.TERM):     [8, False, None],
+    (8, Token.REF, StackToken.TERM):     [9, False, None],
+    (9, Token.RPAREN, StackToken.TERM):     [1, False, None]
 }
 
 
@@ -143,7 +382,7 @@ def lex(s: str) -> list:
   """
   Convert a string to a token sequence.
   """
-  print(f"lexing {s}")
+  try_lex(s)
   tokens = []
   while s:
     token, s = match_and_step(s)
@@ -159,6 +398,7 @@ def transition(state, transitions, tok, stack):
   if len(stack) == 0: raise Exception("Stack underflow")
   # Handle transition.
   if (state, tok, stack[-1]) not in transitions: return State.REJ
+  print(transitions[(state, tok, stack[-1])])
   state, pop, push = transitions[(state, tok, stack[-1])]
   if pop: stack.pop()
   if push is not None: stack.append(push)
@@ -181,6 +421,7 @@ def parse(tokens: list) -> bool:
     if state in terminal_states: break
     # Transition.
     tok_id = get_token_id(tok)
+    print(state, tok_id, stack[-1])
     state = transition(state, transitions, tok_id, stack)
   # print("parsed... Final state: ", state)
   return state == State.ACC

@@ -1,0 +1,3 @@
+%import common.SIGNED_NUMBER
+
+literal: SIGNED_NUMBER

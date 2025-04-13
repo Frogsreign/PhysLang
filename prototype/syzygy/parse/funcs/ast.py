@@ -14,8 +14,9 @@
 
 # Helper-helper: Checks whether the current operator has lower precedence than 
 # the token of least precedence so far seen, and potentially updates it.
-def update_min_precedence(tokens, cur_index, least_precedence_seen_index, cur_precedence, 
-                          least_precedence_seen, precedence, right_associative):
+def update_least_precedence(tokens, cur_index, least_precedence_seen_index, 
+                          cur_precedence, least_precedence_seen, precedence,
+                          right_associative):
   if (cur_precedence < least_precedence_seen or
       cur_precedence == least_precedence_seen and
       tokens[cur_index] not in right_associative):
@@ -26,7 +27,7 @@ def update_min_precedence(tokens, cur_index, least_precedence_seen_index, cur_pr
 
 # Helper: Finds the index of the operator with the least precedence
 # (respecting associativity)
-def min_precedence(tokens, precedence, right_associative):
+def least_precedence(tokens, precedence, right_associative):
   depth = 0
   least_precedence_seen_index = -1
   least_precedence_seen = max(precedence.values())
@@ -37,7 +38,7 @@ def min_precedence(tokens, precedence, right_associative):
       depth -= 1
     elif depth == 0 and token in precedence:
       # Only update if we aren't inside any parentheses.
-      least_precedence_seen_index, least_precedence_seen = update_min_precedence(
+      least_precedence_seen_index, least_precedence_seen = update_least_precedence(
           tokens, i, least_precedence_seen_index, precedence[token], 
           least_precedence_seen, precedence, right_associative)
     elif token in ("norm", "dot"):
@@ -51,7 +52,7 @@ def tokens_to_ast(tokens):
   """
   Converts a validated expression into an AST.
 
-  Recursively builds the AST. 
+  Recursively builds the AST. In each step: splits the 
 
   Example: "3 + 5 * 2 - 8 / 4" becomes `[-, [+, 3, [*, 5, 2]], [/, 8, 4]]`
   """
@@ -67,9 +68,9 @@ def tokens_to_ast(tokens):
       # Leaf: Requires no further processing
       root.append(tokens[0])
     else:
-      min_precidence_index = min_precedence(tokens, precedence,
+      least_precidence_index = least_precedence(tokens, precedence,
                                             right_associative)
-      if min_precidence_index == -1:
+      if least_precidence_index == -1:
         # Terminal expression or dot/norm
         if tokens[0] == 'norm':
           root.extend(['norm', []])
@@ -77,7 +78,7 @@ def tokens_to_ast(tokens):
         elif tokens[0] == 'dot':
           comma_index = tokens.find(",")
           if comma_index == -1:
-              raise Exception("Invalid dot expression: ", tokens)
+            raise Exception("Invalid dot expression: ", tokens)
           root.extend(['dot', [], []])
           stack.append((tokens[2:comma_index], root[1]))
           stack.append((tokens[comma_index+1:-1], root[2]))
@@ -85,9 +86,9 @@ def tokens_to_ast(tokens):
           stack.append((tokens[1:-1], root))
       else:
         # Binary expression
-        root.extend([tokens[min_precidence_index], [], []])
-        stack.append((tokens[:min_precidence_index], root[1]))
-        stack.append((tokens[min_precidence_index + 1:], root[2]))
+        root.extend([tokens[least_precidence_index], [], []])
+        stack.append((tokens[:least_precidence_index], root[1]))
+        stack.append((tokens[least_precidence_index + 1:], root[2]))
 
   return tree
 
@@ -179,10 +180,17 @@ def collapse_dot(sub, a, b, n):
   sub.extend(["*", [f"{a}.index:{n - 1}"], [f"{b}.index:{n - 1}"]])
 
 
+def validate_dot(a_name, b_name, particle_metadata):
+    # Dimensionality check.
+    _, a_name = prop_a.split(".")
+    _, b_name = prop_b.split(".")
+    if particle_metadata.prop_size(a_name) != particle_metadata.prop_size(b_name):
+        raise ValueError("encountered a dot product between vectors of different dimensions")
+
+
 # Validate before reducing to lower order logic.
 def maybe_collapse_dot(sub, particle_metadata):
     prop_a, prop_b = sub[1][0], sub[2][0]
-    # Dimensionality check.
     _, a_name = prop_a.split(".")
     _, b_name = prop_b.split(".")
     if particle_metadata.prop_size(a_name) != particle_metadata.prop_size(b_name):

@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-
+#
+# @author Jacob Leider
+#
+#
 # A helper class for the SimState class. DataLayout maps properties to indices 
 # in a global data array.
 
@@ -15,27 +18,21 @@ class DataLayout:
     def idx_of(self, particle_name=None, prop_name=None, index=0):
       idx = 0
       if particle_name is not None:
-        idx += self.particle_metadata.particle_size * self.particle_metadata.particle_name_to_idx[particle_name]
+        particle_idx = self.particle_metadata.particle_name_to_idx[particle_name]
+        idx += self.particle_size() * particle_idx
       if prop_name is not None:
-        idx += self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
+        idx += self.prop_offset(prop_name)
       idx += index
       return idx
 
 
     def assign_list(self, particle_name, prop_name, prop_data, data):
       for prop_idx, prop_val in enumerate(prop_data):
-        idx = self.idx_of(
-                particle_name, 
-                prop_name, 
-                prop_idx)
-        data[idx] = prop_val
+        data[self.idx_of(particle_name, prop_name, prop_idx)] = prop_val
 
 
     def assign_element(self, particle_name, prop_name, prop_data, data):
-      idx = self.idx_of(
-              particle_name, 
-              prop_name)
-      data[idx] = prop_data
+      data[self.idx_of(particle_name, prop_name)] = prop_data
 
 
     def init_data(self, data, particles):
@@ -43,31 +40,36 @@ class DataLayout:
         Fill empty data buffer with particle data.
         """
         for particle in particles:
-            particle_name = particle["name"]
-            particle_data = particle["props"]
-            for prop_name, prop_data in particle_data.items():
-                prop_size = self.prop_size(prop_name)
-                if prop_size == 1:
-                    self.assign_element(particle_name, prop_name, prop_data, data)
-                elif prop_size > 1:
-                    self.assign_list(particle_name, prop_name, prop_data, data)
-               
+          particle_name = particle["name"]
+          particle_data = particle["props"]
+          for prop_name, prop_data in particle_data.items():
+            prop_size = self.prop_size(prop_name)
+            if prop_size == 1:
+              self.assign_element(particle_name, prop_name, prop_data, data)
+            elif prop_size > 1:
+              self.assign_list(particle_name, prop_name, prop_data, data)
 
-    def idx_as_str(self, particle_id="obj", prop_name=None, index=0):
-        idx = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]] + index
-        return f"{idx} + {particle_id} * {self.particle_size()}"    
+    def idx_as_str(self, particle_id="A", prop_name=None, index=0):
+        idx = self.prop_offset(prop_name) + index
+        return f"{idx} + {particle_id} * {self.particle_size()}"
 
 
     def prop_offset(self, prop_name) -> int:
-        return self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
+        prop_offsets = self.particle_metadata.prop_offsets
+        prop_idx = self.particle_metadata.prop_name_to_idx[prop_name]
+        return prop_offsets[prop_idx]
 
 
     def prop_size(self, prop_name) -> int:
-        return self.particle_metadata.prop_sizes[self.particle_metadata.prop_name_to_idx[prop_name]]
+        prop_sizes = self.particle_metadata.prop_sizes
+        prop_idx = self.particle_metadata.prop_name_to_idx[prop_name]
+        return prop_sizes[prop_idx]
 
 
     def prop_idx_all_particles(self, prop_name):
-        prop_offset = self.particle_metadata.prop_offsets[self.particle_metadata.prop_name_to_idx[prop_name]]
+        """The list of all indices in the data array corresponding to the 
+        property `prop_name`"""
+        prop_offset = self.prop_offset(prop_name)
         out = numpy.array([
             range(i * self.particle_size() + prop_offset, 
                   i * self.particle_size() + prop_offset + 3) 
@@ -76,10 +78,13 @@ class DataLayout:
 
 
     def num_particles(self) -> int:
+        """Number of particles in the simulation"""
         return self.particle_metadata.num_particles
 
 
     def particle_size(self):
+        """Number of words per particle. The size of a word depends on the type 
+        of data array passed to init_data."""
         return self.particle_metadata.particle_size
 
 
@@ -109,9 +114,12 @@ class ParticleMetadata:
         self.prop_name_to_idx["net-force"] = net_force_idx
         self.prop_names.append("net-force")
         self.prop_sizes.append(pos_size)
+
+        for i, name in enumerate(self.prop_names):
+            print(f"\t{i}) {name}: {self.prop_sizes[self.prop_name_to_idx[name]]}")
+
         self.prop_offsets.append(particle_size_without_net_force)
         self.particle_size = particle_size_without_net_force + pos_size
-
 
     def prop_size(self, prop: int | str):
         if isinstance(prop, int):
