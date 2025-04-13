@@ -23,19 +23,11 @@ class FuncHandler:
         force_funcs = []
         force_outps = []
 
-        # Define variables and variable name mapper.
-        def var_converter(ast_var_name):
-            particle_name, prop_name, prop_idx = vars.parse_var(ast_var_name)
-            return f"data[{data_layout.idx_as_str(
-                    prop_name=prop_name, 
-                    particle_id=particle_name, 
-                    index=prop_idx)}]"
-    
         compiler_options = {
             "variables_predefined": True,
             "output_lang": "py",
+            "particle_metadata": data_layout.particle_metadata,
             "variables": ["A", "B", "data"],
-            "var_name_mapper": var_converter
         }
 
         self._compile_forces(forces, force_names, force_funcs, 
@@ -50,21 +42,12 @@ class FuncHandler:
         update_rule_names = []
         update_rule_funcs = []
         update_rule_outps = []
-
-        # Define variables and variable name mapper.
-        def var_converter(ast_var_name):
-            if ast_var_name.startswith("dt"):
-                return "dt"
-            else:
-                _, prop_name, prop_idx = vars.parse_var(ast_var_name)
-                #print("PARSED VAR: ", _, prop_name, prop_idx)
-                return f"data[{data_layout.idx_as_str(prop_name=prop_name, index=prop_idx)}]"
                     
         compiler_options = {
             "variables_predefined": True,
             "variables": ["A", "dt", "data"],
             "output_lang": "py",
-            "var_name_mapper": var_converter
+            "particle_metadata": data_layout.particle_metadata,
         }
         
         self._compile_update_rules(update_rules, update_rule_names, 
@@ -85,7 +68,7 @@ class FuncHandler:
             self._compile_force(entry["func"], compiler_options, 
                                force_names, force_funcs)
             # Assign force to an output variable (net-force).
-            print("FORCE")
+            #print("FORCE")
             self.set_outp(entry, force_outps, data_layout)
 
 
@@ -100,7 +83,7 @@ class FuncHandler:
                                       compiler_options, 
                                       update_rule_names, 
                                       update_rule_funcs)
-            print("UPDATE")
+            #print("UPDATE")
             self.set_outp(entry, update_rule_outps, data_layout)
 
 
@@ -124,9 +107,8 @@ class FuncHandler:
 
 
     def set_outp(self, update_rule_entry, update_rule_outps, data_layout):
-        for k, v in update_rule_entry.items():
-            if k != "func":
-                print(f"    {k}: {v}")
-        _, prop_name, prop_idx = vars.parse_var(update_rule_entry["out"])
+        #for k, v in update_rule_entry.items(): if k != "func": print(f"    {k}: {v}")
+        outp = update_rule_entry["out"]
+
         update_rule_outps.append(data_layout.idx_of(
-            prop_name=prop_name, index=prop_idx))
+            prop_name=outp.property_name, index=outp.property_index))

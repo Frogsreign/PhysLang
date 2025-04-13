@@ -9,6 +9,9 @@ py-modules = []
 name = "syzygy"
 version = "1.0.0"
 dependencies = [
+  "numpy",
+  "matplotlib",
+  "lark"
 ]
 requires-python = ">=3.8"
 authors = [

@@ -1,6 +1,13 @@
 // Imports
-%import .identifier.identifier
-%import .literal.literal
+%import .identifier.identifier -> identifier
+%import .identifier.particle_property_access -> particle_property_access
+%import .identifier.particle_name -> particle_name
+%import .identifier.property_name -> property_name
+%import .identifier.property_index -> property_index
+%import .identifier.keyword -> keyword
+
+%import .literal.literal -> literal
+
 %import common.WS
 %ignore WS
 

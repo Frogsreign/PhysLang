@@ -117,6 +117,7 @@ class SimState:
 
 
 def create_simulation(script):
-    tree = parse.build_entire_ast(script)
+    ast_builder = parse.AstBuilder()
+    tree = ast_builder.build_entire_ast(script)
     state = SimState(tree["particles"], tree["forces"], tree["update-rules"])
     return state
