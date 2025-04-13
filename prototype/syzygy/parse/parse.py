@@ -1,6 +1,7 @@
-
+#!/usr/bin/python3
 #
 # @author Jacob Leider
+#
 #
 # This module is responsible for parsing an entire script; objects, functions 
 # and all.

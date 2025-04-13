@@ -1,11 +1,14 @@
+#!/usr/bin/python3
 #
 # @author Jacob Leider
+#
 #
 # Utilities for AST Shaping. Each class performs a round of shaping.
 # 
 
 import copy
 import lark
+
 
 
 # Round 1

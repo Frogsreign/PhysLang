@@ -1,5 +1,7 @@
+#!/usr/bin/python3
 #
 # @author Jacob Leider
+#
 #
 # A `SimState` instance is constructed from a parse-tree with three main 
 # branches: particles, forces, and update rules. `SimState` utilizes helper
