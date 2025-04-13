@@ -11,9 +11,10 @@ import lark
 
 
 
-# Round 1
-# Concatenate names.
-class MergeIds(lark.Visitor):
+# Round 1 (VISIT BOTTOM UP)
+#
+# Concatenate children of variable names (said children are either words, numbers or underscores).
+class IdentifierNameFlattener(lark.Visitor):
     def particle_name(self, tree):
         concat_child = "".join([child for child in tree.children])
         tree.children = [concat_child]
@@ -23,9 +24,9 @@ class MergeIds(lark.Visitor):
         tree.children = [concat_child]
 
 
-# Round 2
+# Round 2 (VISIT BOTTOM UP)
+#
 # Expand `norm(a)` to `dot(a, a)^0.5`, `or abs(a)`
-# VISIT BOTTOM UP (default visit)
 class NormToDotConverter(lark.Visitor):
     def norm(self, tree):
         child = tree.children[0]
@@ -38,8 +39,9 @@ class NormToDotConverter(lark.Visitor):
             tree.children = [dot_tree, exp_tree]
 
 
-# Round 3
-# VISIT BOTTOM UP (default visit) 
+# Round 3 (VISIT BOTTOM UP)
+#
+# Assigns a `dimension` attribute to each subtree.
 class DimensionAnnotator(lark.Visitor):
 
     def __init__(self, particle_metadata):
@@ -127,8 +129,10 @@ class DimensionAnnotator(lark.Visitor):
         tree.dimension = 1
 
 
-# Round 4
-# VISIT TOPDOWN
+# Round 4 (VISIT TOP DOWN)
+#
+# Expand the dot products by linearity (e.g. <x + y, z> becomes 
+# <x, z> + <y, z>, and <a * x, y> becomes a * <x, y>)
 class DotExpander(lark.Visitor):
 
     def dot(self, tree):
@@ -167,7 +171,8 @@ class DotExpander(lark.Visitor):
 
 
 
-# Round 5
+# Round 5 (VISIT TOP DOWN)
+#
 # Only call AFTER `DotExpander`
 class DotToScalarConverter(lark.Visitor):
     def _approve_dot_to_scalar_conversion(self, tree):
@@ -209,8 +214,11 @@ class DotToScalarConverter(lark.Visitor):
         curr.children.append(cp)
 
 
-# Round 6
-class LiteralFlattener(lark.Visitor):
+# Round 6 (VISIT BOTTOM UP)
+#
+# Inlines keywords such as `dt` and literals 
+# (e.g [literal, [[number, [5]]]] becomes [literal, [5]])
+class LiteralAndKeywordFlattener(lark.Visitor):
     def literal(self, tree):
         if len(tree.children) == 1:
             child = tree.children[0]
@@ -225,8 +233,13 @@ class LiteralFlattener(lark.Visitor):
 
 
 # Round 7
+#
+# After rounds 1-6 are complete, `CoordinateBuilder` converts any non-scalar 
+# inputs to scalars by assigning them an index (specified in the constructor).
+#
 # For example, if the output of the force is `net-force`, this can create a net 
 # force for each coordinate.
+#
 # TODO: Prove that this works and explain it. 
 #   * Outline: vectors may only be added and multiplied by scalars, so 
 #              coordinates are preserved.

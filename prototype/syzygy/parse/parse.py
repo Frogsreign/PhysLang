@@ -68,7 +68,7 @@ class AstBuilder:
 
     def process_ast(self, tree, metadata):
         # Round 1
-        MergeIds().visit(tree)
+        IdentifierNameFlattener().visit(tree)
         # Round 2
         DimensionAnnotator(metadata).visit(tree)
         # Round 3
@@ -78,7 +78,7 @@ class AstBuilder:
         # Round 5
         DotToScalarConverter().visit_topdown(tree)
         # Round 6
-        LiteralFlattener().visit(tree)
+        LiteralAndKeywordFlattener().visit(tree)
         return tree
 
 
@@ -137,7 +137,7 @@ class AstBuilder:
         
         tree = self.parser.parse(ppa_string)
         # Build the ParticlePropertyAccess object.
-        MergeIds().visit(tree)
+        IdentifierNameFlattener().visit(tree)
         ParticlePropertyAccessBuilder(entry["out"]).visit(tree)
 
 
