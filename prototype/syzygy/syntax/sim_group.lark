@@ -1,0 +1,49 @@
+// Imports (idenitifer)
+%import .identifier.particle_property_access -> particle_property_access
+%import .identifier.property_name -> property_name
+%import .identifier.property_index -> property_index
+%import .identifier.particle_name -> particle_name
+%import .identifier.identifier -> identifier
+// Imports (literal)
+%import .literal.literal -> literal
+%import .literal.literal_vector -> literal_vector
+%import .literal.literal_scalar -> literal_scalar
+// Imports (var)
+%import .var.variable_name -> variable_name
+// Imports (common)
+%import common.WS
+%import common.ESCAPED_STRING
+%ignore WS
+
+// PARTICLE GROUP --------------------------------------------------------------
+particle_group:  (particle_group_entry ";")*
+
+particle_group_entry: particle
+  | force
+  | update
+  | particle_group // nesting?
+
+
+
+// PARTICLE --------------------------------------------------------------------
+particle: "point(" [name_definition ","] [property_definition ("," property_definition)*] ")"
+
+property_definition: variable_name "=" literal
+
+
+
+// UPDATE ----------------------------------------------------------------------
+update: "update(" [name_definition ","] input_definition "," output_definition "," function_definition ")"
+
+
+
+// FORCE -----------------------------------------------------------------------
+force: "force(" [name_definition ","] input_definition "," [output_definition ","] function_definition ")"
+
+name_definition: "name=" variable_name
+
+input_definition: "input=[" variable_name ("," variable_name)* "]" // TODO: a list of inputs
+
+output_definition: "output=" particle_property_access
+
+function_definition: "func=" ESCAPED_STRING // TODO: escaped string

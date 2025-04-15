@@ -7,6 +7,8 @@
 %import .identifier.keyword -> keyword
 
 %import .literal.literal -> literal
+%import .literal.literal_scalar -> literal_scalar
+%import .literal.literal_vector -> literal_vector
 
 %import common.WS
 %ignore WS
@@ -32,6 +34,7 @@ start: expr
 ?builtin: dot
   | norm
   | abs
+  | step
 
 
 // Binary operations
@@ -53,3 +56,5 @@ dot: "dot(" expr "," expr ")"
 norm: "norm(" expr ")"
 
 abs: "abs(" expr ")"
+
+step: "step(" expr ")"

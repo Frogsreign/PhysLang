@@ -10,18 +10,57 @@ import copy
 import lark
 
 
+keyword_dimensions = {
+        "dt": 1
+}
+
 
 # Round 1 (VISIT BOTTOM UP)
 #
 # Concatenate children of variable names (said children are either words, numbers or underscores).
+# Flatten literal scalar tokens 
+# Flatten keyword tokens
 class IdentifierNameFlattener(lark.Visitor):
     def particle_name(self, tree):
-        concat_child = "".join([child for child in tree.children])
-        tree.children = [concat_child]
+        name = "".join([child for child in tree.children])
+        tree.children = [name]
+
 
     def property_name(self, tree):
-        concat_child = "".join([child for child in tree.children])
-        tree.children = [concat_child]
+        name = "".join([child for child in tree.children])
+        tree.children = [name]
+
+
+    def literal_scalar(self, tree):
+        if len(tree.children) != 1:
+            raise Exception("Encoundered literal scalar with multiple children")
+        child = tree.children[0]
+        if isinstance(child, lark.Token):
+            tree.children = [child.value]
+
+
+    # Vectors become lists
+    # TODO: Implement
+    def literal_vector(self, tree):
+        if len(tree.children) == 1:
+            child = tree.children[0]
+            # child is a signed number token
+            if isinstance(child, lark.Token):
+                tree.children = [child.value]
+            # Anything with dimension 1 can be treated as a scalar.
+            tree.data = "literal_scalar"
+        else:
+            # TODO: I think this is correct
+            tree.children = [child.value for child in tree.children]
+            
+
+        #print("LITERAL SCALAR AFTER: ", tree)
+    def keyword(self, tree):
+        if len(tree.children) != 1:
+            raise Exception("Encoundered keyword with multiple children")
+        child = tree.children[0]
+        if isinstance(child, lark.Token):
+            tree.children = [child.value]
 
 
 # Round 2 (VISIT BOTTOM UP)
@@ -42,72 +81,98 @@ class NormToDotConverter(lark.Visitor):
 # Round 3 (VISIT BOTTOM UP)
 #
 # Assigns a `dimension` attribute to each subtree.
+# This allows us to validate context-sensitive information.
 class DimensionAnnotator(lark.Visitor):
-
     def __init__(self, particle_metadata):
         self.particle_metadata = particle_metadata
 
-    def literal(self, tree):
+
+    def literal_scalar(self, tree):
         tree.dimension = 1
+
+
+    def literal_vector(self, tree):
+        tree.dimension = len(tree.children)
+
+
+    def literal(self, tree):
+        tree.dimension = tree.children[0].dimension
+
 
     def add(self, tree):
         left, right = tree.children
         if left.dimension != right.dimension:
-            raise Exception("Invalid expression: cannot add terms with different dimensionality")
+            raise Exception("Addition is not defined for terms with different dimensionalites")
         tree.dimension = left.dimension
+
 
     def sub(self, tree):
         left, right = tree.children
         if left.dimension != right.dimension:
-            raise Exception("Invalid expression: cannot subtract terms with different dimensionality")
+            raise Exception("Subtraction is not defined for terms with different dimensionalites")
         tree.dimension = left.dimension
+
 
     def mul(self, tree):
         #print(tree)
         left, right = tree.children
         if (left.dimension != 1) and (right.dimension != 1):
-            raise Exception(f"Invalid expression: cannot multiply two non-scalar terms dim = {left.dimension} and dim = {right.dimension}")
-
+            raise Exception(f"Scalar multiplication is not defined for two non-scalar factors")
         # Assert left operand is a scalar.
         if (left.dimension != 1) and (right.dimension == 1):
             tree.children = [right, left]
-
         tree.dimension = right.dimension
+
 
     def div(self, tree):
         left, right = tree.children
         if right.dimension != 1:
-            raise Exception("Invalid expression: cannot divide by a non-scalar")
-
+            raise Exception("Attempted to divide by a non-scalar value")
         tree.dimension = left.dimension
+
 
     def pow(self, tree):
         left, right = tree.children
-        if (left.dimension != 1) or (right.dimension != 1):
-            raise Exception("Invalid expression: cannot exponentiate a non-scalar factor, or raise a factor to a non-scalar power")
+        if left.dimension != 1:
+            raise Exception("Attempted to exponentiate a non-scalar value")
+        if right.dimension != 1:
+            raise Exception("Attempted to exponentiate by a non-scalar value")
         tree.dimension = 1
 
 
     def dot(self, tree):
         left, right = tree.children
         if left.dimension != right.dimension:
-            raise Exception("Invalid expression: cannot take an inner product of elements of different dimensionalities.")
+            raise Exception("Inner product is not defined for elements with different dimensionalities.")
         tree.dimension = 1
 
 
     def norm(self, tree):
         tree.dimension = 1
-        # TODO: Test the `abs` stuff
+        # In the next round, norm will be converted to absolute value if it's 
+        # operand is 1-D.
         tree.convert_to_abs = (tree.children[0].dimension == 1)
+
+
+    def step(self, tree):
+        child = tree.children[0]
+        if child.dimension != 1:
+            raise Exception("Step function is not defined for non-scalar values")
+        tree.dimension = 1
+
+
+    def abs(self, tree):
+        child = tree.children[0]
+        if child.dimension != 1:
+            raise Exception("Absolute value is not defined for non-scalar values. Use `norm`")
+        tree.dimension = 1
+
 
 
     def identifier(self, tree):
         # Check for keyword (e.g. `dt` is obviously 1-D)
-        if len(tree.children) == 1:
-            child = tree.children[0]
-            tree.dimension = child.dimension
-        else:
-            raise Exception("IDENTIFIER SHOULD HAVE ONE CHILD. CURRENT IDENTIFIER:", tree)
+        child = tree.children[0]
+        tree.dimension = child.dimension
 
 
     def particle_property_access(self, tree):
@@ -116,17 +181,29 @@ class DimensionAnnotator(lark.Visitor):
         if prop_index is not None:
             tree.dimension = 1
         else:
-            if prop_name not in self.particle_metadata.prop_name_to_idx:
-                raise Exception(f"Add \"{prop_name}\" to metadata")
             tree.dimension = self.particle_metadata.prop_size(prop_name)
-
+            # Give an explicit index of zero if the property is 1-D..
             if tree.dimension == 1:
-                tree.children[2] = lark.Tree("property_index", [0]) # Give an explicit index of zero if the property is 1-D..
+                tree.children[2] = lark.Tree("property_index", [0]) 
 
 
     def keyword(self, tree):
         # TODO: This depends.
-        tree.dimension = 1
+        child = tree.children[0]
+        if child not in keyword_dimensions:
+            raise Exception(f"Unrecognized keyword \"{child}\"")
+        tree.dimension = keyword_dimensions[child] 
+
+
+    # We want to know what's being ignored.
+    def particle_name(self, tree): pass
+    def property_index(self, tree): pass
+    def property_name(self, tree): pass
+    def start(self, tree): pass
+
+
+    def __default__(self, tree):
+        raise Exception(f"No handler defined for rule \"{tree.data}\"")
 
 
 # Round 4 (VISIT TOP DOWN)
@@ -134,7 +211,6 @@ class DimensionAnnotator(lark.Visitor):
 # Expand the dot products by linearity (e.g. <x + y, z> becomes 
 # <x, z> + <y, z>, and <a * x, y> becomes a * <x, y>)
 class DotExpander(lark.Visitor):
-
     def dot(self, tree):
       if len(tree.children) != 2:
           raise Exception("`dot` must have two children. Encountered `dot` with {len(tree.children)} chidren")
@@ -174,6 +250,7 @@ class DotExpander(lark.Visitor):
 # Round 5 (VISIT TOP DOWN)
 #
 # Only call AFTER `DotExpander`
+# TODO: This has to work with literal vectors as well!
 class DotToScalarConverter(lark.Visitor):
     def _approve_dot_to_scalar_conversion(self, tree):
         left, right = tree.children
@@ -195,6 +272,7 @@ class DotToScalarConverter(lark.Visitor):
         cp.dimension = 1
         return cp
 
+
     def dot(self, tree):
         dim = tree.children[0].dimension
         if not self._approve_dot_to_scalar_conversion(tree):
@@ -214,22 +292,19 @@ class DotToScalarConverter(lark.Visitor):
         curr.children.append(cp)
 
 
+
 # Round 6 (VISIT BOTTOM UP)
 #
 # Inlines keywords such as `dt` and literals 
 # (e.g [literal, [[number, [5]]]] becomes [literal, [5]])
-class LiteralAndKeywordFlattener(lark.Visitor):
+class LiteralFlattener(lark.Visitor):
     def literal(self, tree):
         if len(tree.children) == 1:
             child = tree.children[0]
-            if isinstance(child, lark.Token):
-                tree.children = [child.value]
+            if isinstance(child, lark.Tree):
+                if child.data == "literal_scalar":
+                    tree.children = [child.children[0]]
 
-    def keyword(self, tree):
-        if len(tree.children) == 1:
-            child = tree.children[0]
-            if isinstance(child, lark.Token):
-                tree.children = [child.value]
 
 
 # Round 7
@@ -247,6 +322,7 @@ class CoordinateBuilder(lark.Visitor):
     def __init__(self, particle_metadata, extracted_index):
         self.particle_metadata = particle_metadata
         self.extracted_index = extracted_index
+
 
     def particle_property_access(self, tree):
         # Check for keyword (e.g. `dt` is obviously 1-D)

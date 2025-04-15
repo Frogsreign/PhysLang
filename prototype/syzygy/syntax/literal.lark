@@ -1,3 +1,8 @@
 %import common.SIGNED_NUMBER
 
-literal: SIGNED_NUMBER
+literal: literal_scalar
+  | literal_vector
+
+literal_scalar: SIGNED_NUMBER
+
+literal_vector: "[" [(SIGNED_NUMBER ",")*] SIGNED_NUMBER "]"

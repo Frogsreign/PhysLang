@@ -28,7 +28,7 @@ def get_default_compiler_options():
     }
 
 
-def format_binary_associative(leftexpr, rightexpr, op):
+def format_binary_operation(leftexpr, rightexpr, op):
     return f"({leftexpr}) {op} ({rightexpr})"
 
 
@@ -37,21 +37,25 @@ class SyzygyFunctionCompiler(lark.Visitor):
     def __init__(self, compiler_options):
         self.compiler_options = compiler_options
 
+
     def start(self, tree):
         child = tree.children[0]
         tree.expr = child.expr
 
+
     def identifier(self, tree):
-        # TODO: Make sure only one child exists
         child = tree.children[0]
         tree.expr = child.expr
 
+
     def keyword(self, tree):
-        # TODO: Validate keyword
+        # TODO: Make sure keyword is in `parameters`
         child = tree.children[0]
         tree.expr = child
 
+
     def particle_property_access(self, tree):
+        # TODO: Make sure particle_property_access is in `parameters`
         particle_name, prop_name, prop_index = tree.children
 
         particle_name = particle_name.children[0]
@@ -63,35 +67,46 @@ class SyzygyFunctionCompiler(lark.Visitor):
         acc = f"data[{particle_name} * {particle_size} + {prop_offset}]"
         tree.expr = acc 
 
+
     def literal(self, tree):
         child = tree.children[0]
         tree.expr = child
+
 
     def abs(self, tree):
         child = tree.children[0]
         tree.expr = f"abs({child.expr})"
 
+
     def add(self, tree):
         left, right = tree.children
-        tree.expr = format_binary_associative(left.expr, right.expr, "+")
-        #print(tree.expr)
+        tree.expr = format_binary_operation(left.expr, right.expr, "+")
+
 
     def mul(self, tree):
         left, right = tree.children
-        tree.expr = format_binary_associative(left.expr, right.expr, "*")
+        tree.expr = format_binary_operation(left.expr, right.expr, "*")
+
 
     def sub(self, tree):
         left, right = tree.children
-        tree.expr = format_binary_associative(left.expr, right.expr, "-")
+        tree.expr = format_binary_operation(left.expr, right.expr, "-")
+
 
     def div(self, tree):
         left, right = tree.children
-        tree.expr = format_binary_associative(left.expr, right.expr, "/")
+        tree.expr = format_binary_operation(left.expr, right.expr, "/")
+
 
     def pow(self, tree):
         left, right = tree.children
-        tree.expr = format_binary_associative(left.expr, right.expr, "**")
+        tree.expr = format_binary_operation(left.expr, right.expr, "**")
 
+
+    # TODO: Needs testing
+    def step(self, tree):
+        child = tree.children[0]
+        tree.expr = f"0 if ({child.expr}) < 0 else 1"
 
 
 # Formatting utilities.
@@ -159,5 +174,7 @@ def compile_tree(
 
     # Create function signature ----------------------------------------
     func_name, func_code = format_function_definition(syntax_tree.expr, options)
+
+    print(func_code)
 
     return func_name, func_code

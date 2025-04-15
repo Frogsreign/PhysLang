@@ -1,0 +1,19 @@
+// Imports
+%import .identifier.particle_property_access -> particle_property_access
+%import .var.variable_name -> variable_name
+%import .literal.literal -> literal
+
+%import common.WS
+%import common.ESCAPED_STRING
+%ignore WS
+
+force: "force(" [name_definition ","] input_definition "," [output_definition ","] function_definition ")"
+
+name_definition: "name=" variable_name
+
+input_definition: "input=[" variable_name ("," variable_name)* "]" // TODO: a list of inputs
+
+output_definition: "output=" particle_property_access
+
+function_definition: "func=" ESCAPED_STRING // TODO: escaped string
+
