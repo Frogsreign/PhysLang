@@ -107,7 +107,7 @@ class FuncHandler:
 
     def set_outp(self, update_rule_entry, update_rule_outps, data_layout):
         #for k, v in update_rule_entry.items(): if k != "func": print(f"    {k}: {v}")
-        outp = update_rule_entry["out"]
+        outp = update_rule_entry["output"]
 
         update_rule_outps.append(data_layout.idx_of(
-            prop_name=outp.property_name, index=outp.property_index))
+            prop_name=outp["property_name"], index=outp["property_index"]))

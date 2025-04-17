@@ -1,0 +1,129 @@
+// Imports
+%import common.WS
+%import common.INT
+%import common.WORD
+%import common.ESCAPED_STRING
+%ignore WS
+
+start: expr
+
+
+
+// Objects are built top-down.
+
+
+
+// PARTICLE GROUP --------------------------------------------------------------
+particle_group:  (particle_group_entry ";")*
+
+
+particle_group_entry: particle
+  | force
+  | update
+  | particle_group // nesting?
+
+
+
+// PARTICLE --------------------------------------------------------------------
+particle: "point(" [name_assign ","] [property_assign ("," property_assign)*] ")"
+
+property_assign: VARIABLE_NAME "=" initializer_list
+
+
+
+// UPDATE ----------------------------------------------------------------------
+update: "update(" [name_assign ","] input_assign "," output_assign "," function_assign ")"
+
+
+
+// FORCE -----------------------------------------------------------------------
+force: "force(" [name_assign ","] input_assign "," [output_assign ","] function_assign ")"
+
+
+name_assign: "name=" VARIABLE_NAME
+
+input_assign: "input=[" VARIABLE_NAME ("," VARIABLE_NAME)* "]" // TODO: a list of inputs
+
+output_assign: "output=" particle_property_access
+
+function_assign: "func=" ESCAPED_STRING // TODO: escaped string
+
+
+// 
+
+
+// Order of operations
+?expr: term // almost always inline
+    | add
+    | sub
+    | vector_expr
+    | literal
+
+vector_expr: "[" expr ("," expr)* "]"
+
+?term: factor // `term` to match the Jonas-syntax
+    | mul
+    | div
+
+?factor: vector_expr
+    | literal
+    | identifier
+    | builtin
+    | pow
+    | "(" expr ")"
+
+?builtin: dot // Built-in funtions (highest precedence)
+  | norm
+  | abs
+  | step
+
+
+
+// Binary operations
+add: expr "+" term
+
+sub: expr "-" term
+
+mul: term "*" factor
+
+div: term "/" factor
+
+pow: term "^" factor
+
+dot: "dot(" expr "," expr ")"
+    | "<" expr "," expr ">" // inner product notation
+
+
+
+// Unary operators
+norm: "norm(" expr ")"
+
+abs: "abs(" expr ")"
+
+step: "step(" expr ")"
+
+
+
+// Identifier (s)
+identifier: particle_property_access 
+  | keyword
+
+particle_property_access: VARIABLE_NAME "." VARIABLE_NAME ["[" INT "]"]
+
+// PROPERTY_INDEX: "[" INT "]"
+
+!keyword: "dt" // Why the '!' ?
+
+
+
+// Literals
+%import common.SIGNED_NUMBER
+
+initializer_list: SIGNED_NUMBER
+  | "[" [(SIGNED_NUMBER ",")*] SIGNED_NUMBER "]"
+
+literal: SIGNED_NUMBER
+
+
+// Naming
+VARIABLE_NAME: WORD ("_" | (WORD | INT))* // keep the underscores (!)

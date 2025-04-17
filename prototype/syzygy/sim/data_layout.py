@@ -5,6 +5,9 @@
 #
 # A helper class for the SimState class. DataLayout maps properties to indices 
 # in a global data array.
+#
+# Note: In light of various revamps of the parser, this module is due for a 
+# rewrite. Ideally, future versions should build during parsing.
 
 
 import numpy
@@ -28,8 +31,8 @@ class DataLayout:
 
 
     def assign_list(self, particle_name, prop_name, prop_data, data):
-      for prop_idx, prop_val in enumerate(prop_data):
-        data[self.idx_of(particle_name, prop_name, prop_idx)] = prop_val
+        for prop_idx, prop_val in enumerate(prop_data):
+          data[self.idx_of(particle_name, prop_name, prop_idx)] = prop_val
 
 
     def assign_element(self, particle_name, prop_name, prop_data, data):
@@ -44,11 +47,7 @@ class DataLayout:
           particle_name = particle["name"]
           particle_data = particle["props"]
           for prop_name, prop_data in particle_data.items():
-            prop_size = self.prop_size(prop_name)
-            if prop_size == 1:
-              self.assign_element(particle_name, prop_name, prop_data, data)
-            elif prop_size > 1:
-              self.assign_list(particle_name, prop_name, prop_data, data)
+            self.assign_list(particle_name, prop_name, prop_data, data)
 
 
     def idx_as_str(self, particle_id="A", prop_name="pos", index=0):
@@ -105,12 +104,12 @@ class ParticleMetadata:
         # Get sizes and offsets.
         self.prop_sizes = get_prop_sizes(particles_list, self.prop_name_to_idx)
         self.prop_offsets, particle_size_without_net_force = get_prop_offsets(self.prop_sizes)
-        # Add `net-force` property. Update prop_sizes, prop_offsets, 
+        # Add `net_force` property. Update prop_sizes, prop_offsets, 
         # prop_names and prop_to_idx
         net_force_idx = len(self.prop_names)
         pos_size = get_pos_size(self.prop_name_to_idx, self.prop_sizes) 
-        self.prop_name_to_idx["net-force"] = net_force_idx
-        self.prop_names.append("net-force")
+        self.prop_name_to_idx["net_force"] = net_force_idx
+        self.prop_names.append("net_force")
         self.prop_sizes.append(pos_size)
         #for i, name in enumerate(self.prop_names): print(f"\t{i}) {name}: {self.prop_sizes[self.prop_name_to_idx[name]]}")
         self.prop_offsets.append(particle_size_without_net_force)

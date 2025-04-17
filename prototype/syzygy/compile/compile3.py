@@ -13,9 +13,7 @@ import string
 
 # Default initializers for compilation parameters.
 def get_default_func_name():
-    return "".join(
-            random.choices(
-                string.ascii_uppercase + string.digits, k=8))
+    return "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
 
 def get_default_compiler_options():
@@ -38,6 +36,14 @@ class SyzygyFunctionCompiler(lark.Visitor):
         self.compiler_options = compiler_options
 
 
+    def give_token_expr(*args):
+        for arg in args:
+            if isinstance(arg, lark.Token):
+                if hasattr(arg, 'expr'):
+                    raise Exception("Already has expr attribute")
+                arg.expr = str(arg.value)
+
+
     def start(self, tree):
         child = tree.children[0]
         tree.expr = child.expr
@@ -58,9 +64,9 @@ class SyzygyFunctionCompiler(lark.Visitor):
         # TODO: Make sure particle_property_access is in `parameters`
         particle_name, prop_name, prop_index = tree.children
 
-        particle_name = particle_name.children[0]
-        prop_name = prop_name.children[0]
-        prop_index = prop_index.children[0]
+        particle_name = particle_name.value
+        prop_name = prop_name.value
+        prop_index = prop_index.value
 
         particle_size = self.compiler_options["particle_metadata"].particle_size
         prop_offset = self.compiler_options["particle_metadata"].prop_offset(prop_name) + prop_index
@@ -174,7 +180,5 @@ def compile_tree(
 
     # Create function signature ----------------------------------------
     func_name, func_code = format_function_definition(syntax_tree.expr, options)
-
-    print(func_code)
 
     return func_name, func_code

@@ -12,7 +12,6 @@
 #   * `FuncHandler` handles the functions (forces and update rules)
 #
 
-
 import numpy
 from syzygy.parse import parse
 from syzygy.sim import data_layout
@@ -56,7 +55,6 @@ class SimState:
         """
         particle_size = self.data_layout.particle_size()
         num_particles = self.data_layout.num_particles()
-
 
         # Step `steps` times.
         for _ in range(steps):
@@ -110,7 +108,7 @@ class SimState:
 
             # Zero out net-force.
             self._data[self._fresh_data != 0] = self._fresh_data[self._fresh_data != 0]
-            self._data[self.data_layout.prop_idx_all_particles("net-force")] = 0
+            self._data[self.data_layout.prop_idx_all_particles("net_force")] = 0
 
 
     def data(self):
@@ -121,5 +119,5 @@ class SimState:
 def create_simulation(script):
     ast_builder = parse.AstBuilder()
     tree = ast_builder.build_entire_ast(script)
-    state = SimState(tree["particles"], tree["forces"], tree["update-rules"])
+    state = SimState(tree["particles"], tree["forces"], tree["updates"])
     return state

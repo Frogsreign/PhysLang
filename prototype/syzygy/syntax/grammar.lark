@@ -1,0 +1,125 @@
+// Imports
+%import common.WS
+%import common.INT
+%import common.WORD
+%import common.ESCAPED_STRING
+%ignore WS
+
+start: expr
+
+
+// PARTICLE GROUP --------------------------------------------------------------
+particle_group:  (particle_group_entry ";")*
+
+
+particle_group_entry: particle
+  | force
+  | update
+  | particle_group // nesting?
+
+
+
+// PARTICLE --------------------------------------------------------------------
+particle: "point(" [name_definition ","] [property_definition ("," property_definition)*] ")"
+
+property_definition: _variable_name "=" literal
+
+
+
+// UPDATE ----------------------------------------------------------------------
+update: "update(" [name_definition ","] input_definition "," output_definition "," function_definition ")"
+
+
+
+// FORCE -----------------------------------------------------------------------
+force: "force(" [name_definition ","] input_definition "," [output_definition ","] function_definition ")"
+
+name_definition: "name=" _variable_name
+
+input_definition: "input=[" _variable_name ("," _variable_name)* "]" // TODO: a list of inputs
+
+output_definition: "output=" particle_property_access
+
+function_definition: "func=" ESCAPED_STRING // TODO: escaped string
+
+
+
+
+// Order of operations
+?expr: term // almost always inline
+    | add
+    | sub
+
+?term: factor // `term` to match the Jonas-syntax
+    | mul
+    | div
+
+?factor: literal
+    | identifier
+    | builtin
+    | pow
+    | "(" expr ")"
+
+
+?builtin: dot
+  | norm
+  | abs
+  | step
+
+
+
+// Binary operations
+add: expr "+" term
+
+sub: expr "-" term
+
+mul: term "*" factor
+
+div: term "/" factor
+
+pow: term "^" factor
+
+dot: "dot(" expr "," expr ")"
+    | "<" expr "," expr ">" // inner product notation
+
+
+
+// Unary operators
+norm: "norm(" expr ")"
+
+abs: "abs(" expr ")"
+
+step: "step(" expr ")"
+
+
+
+// Identifier (s)
+identifier: particle_property_access 
+  | keyword
+
+particle_property_access: particle_name "." property_name [property_index]
+
+particle_name: _variable_name
+
+property_name: _variable_name
+
+property_index: "[" INT "]"
+
+!keyword: "dt"
+
+
+
+// Literals
+%import common.SIGNED_NUMBER
+
+literal: literal_scalar
+  | literal_vector
+
+literal_scalar: SIGNED_NUMBER
+
+literal_vector: "[" [(SIGNED_NUMBER ",")*] SIGNED_NUMBER "]"
+
+
+
+// Naming
+!_variable_name: WORD [("-" | [(INT | WORD)*])*] // keep the underscores (!)
