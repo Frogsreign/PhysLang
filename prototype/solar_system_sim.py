@@ -4,11 +4,7 @@
 #
 #           python3 -m tests.solar_system_sim
 
-import sys
-print(sys.path)
 import syzygy
-
-from syzygy import anim
 import syzygy.sim.sim_state
 from syzygy import anim_native
 
@@ -34,15 +30,17 @@ def create_solar_system():
 if __name__ == '__main__':
     # Simulation objects (particles).
     
-    state = syzygy.sim.sim_state.create_simulation(open("tests/data/solar_system.txt", "r").read())
+    state = syzygy.sim.sim_state.create_simulation(open("tests/data/new_solar_system.txt", "r").read())
 
     # Simulation parameter (s).
     video_speed = 100
     zoom = 0.1
 
+    x = 2
+
     # Create figure and 3D axis.
     sim = anim_native.Simulation(dt=60 * 60 * video_speed, 
-            steps_per_update=video_speed, 
+            steps_per_update=video_speed * x, 
             state=state)
 
     # Setup background.

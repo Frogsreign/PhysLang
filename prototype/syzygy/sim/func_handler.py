@@ -88,8 +88,7 @@ class FuncHandler:
             self._compile_force(entry["func"], compiler_options, 
                                force_names, force_funcs)
             # Assign force to an output variable (net-force).
-            #print("FORCE")
-            self.set_outp(entry, force_outps, data_layout)
+            self.assign_outp(entry, force_outps, data_layout)
 
 
     def _compile_update_rules(self, update_rules, update_rule_names, 
@@ -103,8 +102,8 @@ class FuncHandler:
                                       compiler_options, 
                                       update_rule_names, 
                                       update_rule_funcs)
-            #print("UPDATE")
-            self.set_outp(entry, update_rule_outps, data_layout)
+            # Assign force to an output variable (net-force).
+            self.assign_outp(entry, update_rule_outps, data_layout)
 
 
     def _compile_force(self, force_code, compiler_options, force_names, force_funcs):
@@ -126,7 +125,7 @@ class FuncHandler:
             update_rule_funcs.append(eval(update_rule_func))
 
 
-    def set_outp(self, update_rule_entry, update_rule_outps, data_layout):
+    def assign_outp(self, update_rule_entry, update_rule_outps, data_layout):
         #for k, v in update_rule_entry.items(): if k != "func": print(f"    {k}: {v}")
         outp = update_rule_entry["output"]
 

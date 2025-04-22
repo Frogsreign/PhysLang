@@ -2,7 +2,8 @@ point(name=sun,
     pos=[0, 0, 0], 
     vel=[0, 0, 0], 
     acc=[0, 0, 0], 
-    mass=1.989e30);
+    mass=1.989e30,
+    charge=-2);
 
 point(name=mercury, 
     pos=[0, 58343169690, 0], 
@@ -10,8 +11,18 @@ point(name=mercury,
     acc=[0, 0, 0], 
     mass=3.3e23);
 
-point(name=venus, pos=[0, 107710467120, 0], vel=[35000, 0, 0], acc=[0, 0, 0], mass=4.87e24);
-point(name=earth, pos=[0, 149597871000, 0], vel=[29800, 0, 0], acc=[0, 0, 0], mass=5.97e24);
+point(name=venus, 
+  pos=[0, 107710467120, 0], 
+  vel=[35000, 0, 0],
+  acc=[0, 0, 0],
+  mass=4.87e24);
+
+point(name=earth, 
+  pos=[0, 149597871000, 0],
+  vel=[29800, 0, 0],
+  acc=[0, 0, 0],
+  mass=5.97e24);
+
 point(pos=[0, 227388763920, 0], vel=[24000, 0, 0], acc=[0, 0, 0], mass=6.42e23);
 
 update(input=[A], output=A.pos, func="A.pos + dt * A.vel");
