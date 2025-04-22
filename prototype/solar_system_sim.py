@@ -14,22 +14,9 @@ import json
 SUN_TO_PLUTO_DISTANCE = 59064e8
 
 
-def create_solar_system():
-    planets_json_file = open("tests/data/solar_system.json", "r")
-    objs = json.JSONDecoder().decode(planets_json_file.read())
-    planets_json_file.close()
-
-    particles = objs["particles"]
-    forces = objs["forces"]
-    update_rules = objs["update-rules"]
-
-    state = SimState(particles, forces, update_rules)
-    return state
-
 
 if __name__ == '__main__':
     # Simulation objects (particles).
-    
     state = syzygy.sim.sim_state.create_simulation(open("tests/data/new_solar_system.txt", "r").read())
 
     # Simulation parameter (s).
