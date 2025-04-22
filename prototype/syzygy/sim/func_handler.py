@@ -15,6 +15,27 @@ class FuncHandler:
     def __init__(self, forces, update_rules, data_layout):
         self.process_forces(forces, data_layout)
         self.process_update_rules(update_rules, data_layout)
+        self.data_layout = data_layout
+
+
+    def forces(self, particle_index):
+        """
+        Generates a sequence of (index, function) pairs where `index` points to 
+        the position in the raw simulation data array corresponding to the 
+        output of `function`.
+        """
+        for func, outp in zip(self.force_funcs, self.force_outps):
+            yield func, self.data_layout.particle_size() * particle_index + outp
+    
+
+    def updates(self, particle_index):
+        """
+        Generates a sequence of (index, function) pairs where `index` points to 
+        the position in the raw simulation data array corresponding to the 
+        output of `function`.
+        """
+        for func, outp in zip(self.update_funcs, self.update_outps):
+            yield func, self.data_layout.particle_size() * particle_index + outp
 
 
     def process_forces(self, forces, data_layout):
@@ -32,7 +53,7 @@ class FuncHandler:
         self._compile_forces(forces, force_names, force_funcs, 
                             force_outps, compiler_options, data_layout)
 
-        self.forces = force_funcs
+        self.force_funcs = force_funcs
         self.force_names = force_names
         self.force_outps = force_outps
             
@@ -53,9 +74,9 @@ class FuncHandler:
                                    update_rule_funcs, update_rule_outps,
                                    compiler_options, data_layout)
 
-        self.update_rules = update_rule_funcs
-        self.update_rule_names = update_rule_names
-        self.update_rule_outps = update_rule_outps
+        self.update_funcs = update_rule_funcs
+        self.update_names = update_rule_names
+        self.update_outps = update_rule_outps
 
 
 

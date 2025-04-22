@@ -3,9 +3,16 @@
 # @author Jacob Leider
 #
 #
-# A `SimState` instance is constructed from a parse-tree with three main 
-# branches: particles, forces, and update rules. `SimState` utilizes helper
-# classes to organize and flatten the simulation data, and to compile the 
+# The abstract class `SimState` may be subclassed depending on how you want to 
+# deal with functions. The default `SimStatePythonLambdas` compiles functions 
+# to lambda objects. This is slower than, say, translating to C, compiling 
+# clang, and accessing via `ctypes`. However, `SimStatePythonLambdas` is 
+# platform independant and simple to understand, so it serves as our default
+# `SimState` object.
+#
+# A `SimStatePythonLambdas` instance is constructed from a parse-tree with 
+# three main branches: particles, forces, and update rules. `SimState` uses 
+# helper classes to organize and flatten the simulation data, and to compile the
 # functions and map functions to their outputs. Specifically,
 #
 #   * `DataLayout` handles the particles
@@ -18,19 +25,19 @@ from syzygy.sim import data_layout
 from syzygy.sim import func_handler
 
 
+
 class SimState:
-    def __init__(self, particles: list, forces: list, update_rules: list):
+    def __init__(self, particles: list, forces: list, updates: list):
         self.data_layout = data_layout.DataLayout(particles)
-        self._data = numpy.zeros(self.data_layout.sim_size(),
-                                 dtype=numpy.float64)
+        self._data = numpy.zeros(self.data_layout.sim_size(), dtype=numpy.float64)
         self._fresh_data = self._data.copy()
         self.data_layout.init_data(self._data, particles)
-        # Empty data buffer.
-        # Initialize forces and update rules.
-        self.func_handler = func_handler.FuncHandler(forces,
-                                                     update_rules,
-                                                     self.data_layout)
 
+
+    def data(self):
+        """Raw simulation data"""
+        return self._data
+    
 
     def positions(self):
         """
@@ -46,78 +53,76 @@ class SimState:
 
     def step(self, dt, t, steps=1):
         """
-        Iterate the state of the simulation.
+        Iterates the state of the simulation.
 
         Args
             dt: Time elapsed between steps.
             t: Time since the start of the simulation.
             steps: Number of times to iterate the simulation state.
         """
-        particle_size = self.data_layout.particle_size()
-        num_particles = self.data_layout.num_particles()
-
         # Step `steps` times.
         for _ in range(steps):
-            #time.sleep(1)
-            #print(self._data[0:13])
-            # Step once.
-            for i in range(num_particles):
-                for j in range(num_particles):
-                    if i == j:
-                        continue # Cannot believe I forgot this. Took me an hour to debug.
-                    # FORCE OF j ON i
-                    #   - in direction (j - i)
-                    #
-                    # Compute net force between i and j, add it to i and j's overall net forces.
-                    # Let comp(i - j, k) be the magnitude of the projection of the unit vector i - j
-                    # onto the direction k (very easy to compute).
-                    #
-                    # e.g. 
-                    #
-                    #   for force F (with direction k):
-                    #       net force on particle i in direction k += F(particle i, particle j) * comp(i-j, k)
-                    #       net force on particle j in direction k += F(particle i, particle j) * comp(i-j, k)
-                    #   
-                    for force, prop_idx in zip(
-                            self.func_handler.forces, 
-                            self.func_handler.force_outps):
-                        offset = i * particle_size + prop_idx
-                        self._data[offset] += force(i, j, self._data) 
+            self._step_once(dt, t)
 
-            for i in range(num_particles):
-                # Update props for particle i based on the net force, and dt.
-                #
-                # e.g. 
-                #
-                #   for update-rule R with output prop.idx:
-                #       data[index-of(prop.idx)] = R(dt, net force)
-                #       
-                for update_rule, prop_idx in zip(
-                        self.func_handler.update_rules, 
-                        self.func_handler.update_rule_outps):
-                    # Location of the data to be updated.
-                    offset = i * particle_size + prop_idx
-                    self._fresh_data[offset] = update_rule(i, dt, self._data)
+    
+    def _step_once(self, dt, t):
+        """See `step`"""
+        raise NotImplementedError
 
-            # Awful debugger function.
-            def print_data():
-                for i in range(self.data_layout.num_particles()):
-                    for j in range(particle_size):
-                        print(self._data[i * particle_size + j], end=" ")
-                    print("")
+        
 
-            # Zero out net-force.
-            self._data[self._fresh_data != 0] = self._fresh_data[self._fresh_data != 0]
-            self._data[self.data_layout.prop_idx_all_particles("net_force")] = 0
+class SimStatePythonLambdas(SimState):
+    def __init__(self, particles: list, forces: list, updates: list):
+        super().__init__(particles, forces, updates)
+        # Manages functions as python lambdas.
+        self.func_handler = func_handler.FuncHandler(forces, updates, self.data_layout)
 
 
-    def data(self):
-        return self._data
+    def _step_once(self, dt, t):
+        """Overridden"""
+        self._compute_step(dt, t)
+        self._refresh_data()
+        # Zero out net-force.
+        self._data[self.data_layout.prop_idx_all_particles("net_force")] = 0
+        
+
+    def _refresh_data(self):
+        """
+        Update the simulation data with any fresh data, and zero out 
+        fresh_data`.
+        """
+        indices = self._fresh_data != 0
+        self._data[indices] = self._fresh_data[indices]
+        self._fresh_data[:] = 0
+    
+
+    def _compute_step(self, dt, t):
+        num_particles = self.data_layout.num_particles()
+
+        # Compute forces.
+        for i in range(num_particles):
+            for j in range(num_particles):
+                if i == j: continue # DON'T FORGET THIS
+                # Compute the force between particles i and j, and apply to 
+                # particle i.
+                for force, index in self.func_handler.forces(i):
+                    self._data[index] += force(i, j, self._data) 
+        
+        # Compute and apply updates.
+        for i in range(num_particles):
+            # Update properties for particle i based on the net force, and dt.
+            for update_rule, index in self.func_handler.updates(i):
+                self._fresh_data[index] = update_rule(i, dt, self._data)
 
 
 # FIXME: This should probably move.
-def create_simulation(script):
+def create_simulation(script, sim_state_class="python-lambdas"):
+    """Builds a `SimState` object from a syzygy script."""
+    # Parse
     ast_builder = parse.AstBuilder()
     tree = ast_builder.build_entire_ast(script)
-    state = SimState(tree["particles"], tree["forces"], tree["updates"])
-    return state
+
+    if sim_state_class == "python-lambdas":
+        return SimStatePythonLambdas(tree["particles"], tree["forces"], tree["updates"])
+    else:
+        raise Exception(f"Unknown SimState subclass \"{sim_state_class}\"")
