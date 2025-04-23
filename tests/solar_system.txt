@@ -1,0 +1,8 @@
+point(pos=[0, 0, 0], vel=[0, 0, 0], acc=[0, 0, 0], m=1.989e30, e=1)
+point(pos=[0, 149597871000, 0], vel=[29800, 0, 0], acc=[0, 0, 0], m=5.969999999999999e24, e=1)
+
+update(input=[A], output=A.pos, func="dt * A.vel")
+update(input=[A], output=A.vel, func="dt * A.acc")
+update(input=[A], output=A.acc, func="A.net-force / A.mass")
+
+force(input=[A,B], output=A.net-force, func="6.674e-11 * A.mass * B.mass * (A.pos - B.pos) / norm(A.pos - B.pos)^2")

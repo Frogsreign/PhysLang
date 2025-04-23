@@ -1,0 +1,11 @@
+point(pos=[0, 0, 0], vel=[0, 0, 0], acc=[0, 0, 0], mass=1.989e30);
+point(pos=[0, 58343169690, 0], vel=[47900, 0, 0], acc=[0, 0, 0], mass=3.3e23);
+point(pos=[0, 107710467120, 0], vel=[35000, 0, 0], acc=[0, 0, 0], mass=4.87e24);
+point(pos=[0, 149597871000, 0], vel=[29800, 0, 0], acc=[0, 0, 0], mass=5.969999999999999e24);
+point(pos=[0, 227388763920, 0], vel=[24000, 0, 0], acc=[0, 0, 0], mass=6.42e23);
+
+update(input=[A], output=A.pos, func="A.pos + dt * A.vel");
+update(input=[A], output=A.vel, func="A.vel + dt * A.acc");
+update(input=[A], output=A.acc, func="A.net-force / A.mass");
+
+force(input=[A,B], func="(abs(6.674e-11) * A.mass * B.mass * (B.pos - A.pos)) / (norm(A.pos - B.pos)^3)");
