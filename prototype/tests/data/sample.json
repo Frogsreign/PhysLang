@@ -1,1 +1,0 @@
-{"group-id": 0, "forces": [], "update-rules": [{"name": 0, "in": ["a", "b"], "out": "c", "func": "a+b"}], "particles": []}

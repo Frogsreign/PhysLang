@@ -1,9 +1,0 @@
-
-particle(name=ball, pos=[0, 0, 2], vel=[0, 0, 0], acc=[0, 0, 0], mass=1.0);
-
-force(name=gravity, input=[A], output=A.net-force[2], func="-9.81 * A.mass")
-
-update(input=[A], output=A.pos, func="A.pos + dt * A.vel");
-update(input=[A], output=A.vel, func="-sign(A.pos[2]) * (abs(A.vel[0]) + dt * abs(A.acc))");
-update(input=[A], output=A.acc, func="A.net-force / A.mass");
-
