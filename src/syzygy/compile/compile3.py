@@ -69,7 +69,9 @@ class SyzygyFunctionCompiler(lark.Visitor):
         prop_index = prop_index.value
 
         particle_size = self.compiler_options["particle_metadata"].particle_size
-        prop_offset = self.compiler_options["particle_metadata"].prop_offset(prop_name) + prop_index
+        # TODO: Casting to `int` is a temporary fix. This function should 
+        # assume `prop_index` is int and throw otherwise.
+        prop_offset = self.compiler_options["particle_metadata"].prop_offset(prop_name) + int(prop_index)
         acc = f"data[{particle_name} * {particle_size} + {prop_offset}]"
         tree.expr = acc 
 
@@ -80,6 +82,8 @@ class SyzygyFunctionCompiler(lark.Visitor):
 
 
     def abs(self, tree):
+        print("Abs " + 80 * '-')
+        print(tree.pretty())
         child = tree.children[0]
         tree.expr = f"abs({child.expr})"
 
@@ -113,6 +117,12 @@ class SyzygyFunctionCompiler(lark.Visitor):
     def step(self, tree):
         child = tree.children[0]
         tree.expr = f"0 if ({child.expr}) < 0 else 1"
+
+
+    # TODO: Needs testing
+    def sign(self, tree):
+        child = tree.children[0]
+        tree.expr = f"-1 if ({child.expr}) < 0 else 1"
 
 
 # Formatting utilities.
@@ -180,5 +190,7 @@ def compile_tree(
 
     # Create function signature ----------------------------------------
     func_name, func_code = format_function_definition(syntax_tree.expr, options)
+
+    print(func_code)
 
     return func_name, func_code

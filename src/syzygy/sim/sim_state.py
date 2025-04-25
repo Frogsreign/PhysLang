@@ -24,6 +24,10 @@ from syzygy.parse import parse
 from syzygy.sim import data_layout
 from syzygy.sim import func_handler
 
+import inspect
+
+import time
+
 
 
 class SimState:
@@ -98,16 +102,37 @@ class SimStatePythonLambdas(SimState):
 
     def _compute_step(self, dt, t):
         num_particles = self.data_layout.num_particles()
-
         # Compute forces.
         for i in range(num_particles):
             for j in range(num_particles):
                 if i == j: continue # DON'T FORGET THIS
+
+
                 # Compute the force between particles i and j, and apply to 
                 # particle i.
                 for force, index in self.func_handler.forces(i):
-                    self._data[index] += force(i, j, self._data) 
+                    signature = inspect.signature(force)
+                    number_of_arguments = len(signature.parameters)
+                    if (number_of_arguments == 3):
+                        self._data[index] += force(i, j, self._data) 
         
+        # Compute forces (2).
+        for i in range(num_particles):
+            # Compute the force between particles i and j, and apply to 
+            # particle i.
+            for force, index in self.func_handler.forces(i):
+
+                signature = inspect.signature(force)
+                number_of_arguments = len(signature.parameters)
+
+                if (number_of_arguments == 2):
+                    self._data[index] += force(i, self._data) 
+
+        #time.sleep(1)
+        #print(self.data_layout.state_str(self.data()))
+
+
+
         # Compute and apply updates.
         for i in range(num_particles):
             # Update properties for particle i based on the net force, and dt.

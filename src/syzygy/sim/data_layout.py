@@ -92,6 +92,17 @@ class DataLayout:
     def sim_size(self):
         return self.particle_size() * self.num_particles()
 
+    def state_str(self, data):
+        out = ""
+        for particle_name in self.particle_metadata.particle_names:
+            out += particle_name + "\n"
+            for prop_name in self.particle_metadata.prop_names:
+                out += "\t" + prop_name + "\n"
+                for i in range(self.particle_metadata.prop_size(prop_name)):
+                    out += f"\t\t{i}: " + str(data[self.idx_of(particle_name, prop_name, i)]) + "\n"
+
+        return out
+
 
 class ParticleMetadata:
     def __init__(self, particles_list):

@@ -12,7 +12,6 @@
 #
 
 
-from numpy import isin
 import lark
 
 
@@ -34,7 +33,12 @@ class ParticleMetadataBuilder(lark.Visitor):
 
     def particle_group(self, tree):
         # TODO
-        pass
+        if not hasattr(tree, "particle_group"):
+            tree.particle_group = ""
+
+        for child in tree.children:
+            if isinstance(child, lark.Tree):
+                pass
         
 
     def force(self, tree):

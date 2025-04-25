@@ -58,6 +58,10 @@ class LinearAlgebraChecker2(lark.Transformer):
                                  lark.Token('RULE', 'particle_property_access'), 
                                  [particle_name, property_name, lark.Token('NUMBER', i)]) 
                               for i in range(dim)])
+        else:
+            return lark.Tree(lark.Token('RULE', 'vector_expr'), 
+                             [tree])
+
 
 
     def keyword(self, tree):
@@ -141,11 +145,6 @@ class LinearAlgebraChecker2(lark.Transformer):
     def mul(self, tree):
         # Expects two vector_expr children
         left, right = tree.children
-        #print(80 * '-')
-        #for child in left.children: print(child.data)
-        #print(80 * '-')
-        #for child in right.children: print(child.data)
-        #print(80 * '-')
 
         if (left.data != "vector_expr") or (right.data != "vector_expr"):
             raise Exception("Expected vector_expr operands")
@@ -214,8 +213,8 @@ class LinearAlgebraChecker2(lark.Transformer):
             raise Exception("Expected one `vector_expr` child")
         
         child = tree.children[0]
-        return  lark.Tree(lark.Token('RULE', 'vector_expr'), 
-                          lark.Tree(lark.Token('RULE', 'abs'), [child]))
+        return lark.Tree(lark.Token('RULE', 'vector_expr'), 
+                          [lark.Tree(lark.Token('RULE', 'abs'), [child.children[0]])])
 
 
     def step(self, tree):
@@ -224,8 +223,21 @@ class LinearAlgebraChecker2(lark.Transformer):
             raise Exception("Expected one `vector_expr` child")
         
         child = tree.children[0]
-        return  lark.Tree(lark.Token('RULE', 'vector_expr'), 
-                          lark.Tree(lark.Token('RULE', 'step'), [child]))
+        return lark.Tree(lark.Token('RULE', 'vector_expr'), 
+                          [lark.Tree(lark.Token('RULE', 'step'), [child.children[0]])])
+
+
+    def sign(self, tree):
+        #print("Sign " + 80 * '-')
+        #print(tree.pretty())
+        #print(85 * '-')
+        # Expects one vector_expr child.
+        if len(tree.children) != 1:
+            raise Exception("Expected one `vector_expr` child")
+        
+        child = tree.children[0]
+        return lark.Tree(lark.Token('RULE', 'vector_expr'), 
+                          [lark.Tree(lark.Token('RULE', 'sign'), [child.children[0]])])
 
 
         

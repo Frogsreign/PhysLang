@@ -17,26 +17,20 @@ SUN_TO_PLUTO_DISTANCE = 59064e8
 
 if __name__ == '__main__':
     # Simulation objects (particles).
-    state = syzygy.sim.sim_state.create_simulation(open("tests/data/new_solar_system.txt", "r").read())
+    state = syzygy.sim.sim_state.create_simulation(open("tests/data/bounce.txt", "r").read())
 
     # Simulation parameter (s).
-    video_speed = 100
+    video_speed = 0.05
     zoom = 0.1
 
-    x = 2
-
     # Create figure and 3D axis.
-    sim = anim_native.Simulation(dt=60 * 60 * video_speed, 
-            steps_per_update=video_speed * x, 
+    sim = anim_native.Simulation(dt=video_speed, 
+            steps_per_update=500, 
             state=state)
 
     # Setup background.
     sim.config_fig() 
-    sim.config_bg()
-    sim.config_plot_limits(
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE), 
-            (-zoom * SUN_TO_PLUTO_DISTANCE, zoom * SUN_TO_PLUTO_DISTANCE))
+    sim.config_bg() 
 
     sim.create_animation()
     sim.run_animation()

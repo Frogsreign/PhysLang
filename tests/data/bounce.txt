@@ -1,9 +1,10 @@
 
-particle(name=ball, pos=[0, 0, 2], vel=[0, 0, 0], acc=[0, 0, 0], mass=1.0);
+point(name=ball, pos=[0, 0, 1], vel=[0, 0, 0], acc=[0, 0, 0], mass=1.0);
 
-force(name=gravity, input=[A], output=A.net-force[2], func="-9.81 * A.mass")
+force(name=gravity, input=[A], output=A.net_force[2], func="-9.81 * A.mass");
+force(name=air_res, input=[A], output=A.net_force[2], func="-1 * A.vel[2]^3");
+force(name=joince, input=[A], output=A.net_force[2], func="1000 * step(-1 * A.pos[2]) * abs(A.vel[2])");
 
-update(input=[A], output=A.pos, func="A.pos + dt * A.vel");
-update(input=[A], output=A.vel, func="-sign(A.pos[2]) * (abs(A.vel[0]) + dt * abs(A.acc))");
-update(input=[A], output=A.acc, func="A.net-force / A.mass");
-
+update(input=[A], output=A.pos[2], func="A.pos[2] + dt * A.vel[2]");
+update(input=[A], output=A.vel[2], func="A.vel[2] + dt * A.acc[2]");
+update(input=[A], output=A.acc[2], func="A.net_force[2] / A.mass");

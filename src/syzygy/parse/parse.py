@@ -59,22 +59,39 @@ class AstBuilder:
         
         # Parse
         tree = self.parser.parse(func)
+        print(tree.pretty())
         
         # Shape
         tree = LinearAlgebraChecker2(metadata).transform(tree)
 
+        print(80 * '-')
+        print(tree.pretty())
+
         coords = tree.children
-        for index, coord in enumerate(coords):
-            coords[index] = {
-                    "name": str(entry["name"]) + str(index),
+
+        if len(coords) == 1 and output["property_index"] is not None:
+            coords[0] = {
+                    "name": str(entry["name"]),
                     "inputs": entry["inputs"],
                     "output": {
                         "particle_name": output["particle_name"],
                         "property_name": output["property_name"],
-                        "property_index": index
+                        "property_index": int(output["property_index"])
                         },
-                    "func": coord
+                    "func": coords[0]
             }
+        else:
+            for index, coord in enumerate(coords):
+                coords[index] = {
+                        "name": str(entry["name"]) + str(index),
+                        "inputs": entry["inputs"],
+                        "output": {
+                            "particle_name": output["particle_name"],
+                            "property_name": output["property_name"],
+                            "property_index": index
+                            },
+                        "func": coord
+                }
 
         return coords
 
@@ -88,6 +105,8 @@ class AstBuilder:
             #self.specify_function_output(entry, "force")
             new_forces.extend(self.maybe_split_function_into_coordinates(entry, 
                                                                     metadata))
+        print(new_forces)
+
         tree["forces"] = new_forces
 
         new_update_rules = []

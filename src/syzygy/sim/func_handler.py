@@ -85,6 +85,7 @@ class FuncHandler:
         # Compile all forces.
         for entry in force_entries:
             compiler_options["func_name"] = entry["name"]
+            compiler_options["variables"] = entry["inputs"] + ["data"]
             self._compile_force(entry["func"], compiler_options, 
                                force_names, force_funcs)
             # Assign force to an output variable (net-force).
@@ -98,6 +99,7 @@ class FuncHandler:
         for entry in update_rules:
             # Compile.
             compiler_options["func_name"] = entry["name"]
+            compiler_options["variables"] = entry["inputs"] + ["dt", "data"]
             self._compile_update_rule(entry["func"], 
                                       compiler_options, 
                                       update_rule_names, 
@@ -117,9 +119,11 @@ class FuncHandler:
 
     def _compile_update_rule(self, update_rule_code, compiler_options,
                              update_rule_names, update_rule_funcs):
+            
             # Compile.
             update_rule_name, update_rule_func = compile3.compile_tree(
                     update_rule_code, compiler_options=compiler_options)
+
             # Append to lists.
             update_rule_names.append(update_rule_name)
             update_rule_funcs.append(eval(update_rule_func))
