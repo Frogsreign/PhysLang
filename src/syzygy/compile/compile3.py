@@ -82,8 +82,6 @@ class SyzygyFunctionCompiler(lark.Visitor):
 
 
     def abs(self, tree):
-        print("Abs " + 80 * '-')
-        print(tree.pretty())
         child = tree.children[0]
         tree.expr = f"abs({child.expr})"
 
@@ -190,7 +188,5 @@ def compile_tree(
 
     # Create function signature ----------------------------------------
     func_name, func_code = format_function_definition(syntax_tree.expr, options)
-
-    print(func_code)
 
     return func_name, func_code

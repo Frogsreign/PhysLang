@@ -59,13 +59,9 @@ class AstBuilder:
         
         # Parse
         tree = self.parser.parse(func)
-        print(tree.pretty())
         
         # Shape
         tree = LinearAlgebraChecker2(metadata).transform(tree)
-
-        print(80 * '-')
-        print(tree.pretty())
 
         coords = tree.children
 
@@ -105,8 +101,6 @@ class AstBuilder:
             #self.specify_function_output(entry, "force")
             new_forces.extend(self.maybe_split_function_into_coordinates(entry, 
                                                                     metadata))
-        print(new_forces)
-
         tree["forces"] = new_forces
 
         new_update_rules = []

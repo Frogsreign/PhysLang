@@ -1,12 +1,19 @@
 [project]
+
 name = "syzygy"
+
 version = "1.0.0"
+
+readme = "README.md"
+
+requires-python = ">=3.8"
+
 dependencies = [
   "numpy",
   "matplotlib",
   "lark"
 ]
-requires-python = ">=3.8"
+
 authors = [
   {name = "Jacob Leider", email = "jhl141@case.edu"}, # Add your names
 ]
@@ -16,16 +23,9 @@ maintainers = [
 ]
 
 
-readme = "README.md"
-
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["syzygy"]
-
 [tool.setuptools.packages.find]
-where = ["."]
-
-
+where=["src/syzygy"]

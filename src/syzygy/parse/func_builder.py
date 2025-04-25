@@ -228,9 +228,6 @@ class LinearAlgebraChecker2(lark.Transformer):
 
 
     def sign(self, tree):
-        #print("Sign " + 80 * '-')
-        #print(tree.pretty())
-        #print(85 * '-')
         # Expects one vector_expr child.
         if len(tree.children) != 1:
             raise Exception("Expected one `vector_expr` child")
