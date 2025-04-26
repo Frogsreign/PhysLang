@@ -9,13 +9,7 @@
 
 start: expr
 
-
-
-// Objects are built top-down.
-
-// PARTICLE GROUP --------------------------------------------------------------
 particle_group:  (particle_group_entry ";")*
-
 
 particle_group_entry: particle
   | force
@@ -24,21 +18,17 @@ particle_group_entry: particle
 
 
 
-// PARTICLE --------------------------------------------------------------------
+// Primitives
 particle: "point(" [name_assign ","] [property_assign ("," property_assign)*] ")"
 
-property_assign: VARIABLE_NAME "=" initializer_list
-
-
-
-// UPDATE ----------------------------------------------------------------------
 update: "update(" [name_assign ","] input_assign "," output_assign "," function_assign ")"
 
-
-
-// FORCE -----------------------------------------------------------------------
 force: "force(" [name_assign ","] input_assign "," [output_assign ","] function_assign ")"
 
+
+
+// Assignments
+property_assign: VARIABLE_NAME "=" initializer_list
 
 name_assign: "name=" VARIABLE_NAME
 
@@ -48,8 +38,6 @@ output_assign: "output=" particle_property_access
 
 function_assign: "func=" ESCAPED_STRING // TODO: escaped string
 
-
-// 
 
 
 // Order of operations
