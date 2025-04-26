@@ -17,7 +17,7 @@ SUN_TO_PLUTO_DISTANCE = 59064e8
 
 if __name__ == '__main__':
     # Simulation objects (particles).
-    state = syzygy.sim.sim_state.create_simulation(open("tests/data/solar_system_lite.txt", "r").read())
+    state = syzygy.sim.sim_state.create_simulation(open("tests/scripts/solar_system_lite.txt", "r").read())
 
     # Simulation parameter (s).
     video_speed = 100
