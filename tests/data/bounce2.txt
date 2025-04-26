@@ -1,0 +1,37 @@
+// Bounce (1)
+//
+// Models the collision by setting the direction of the ball's velocity to +y 
+// whenever the ball's height is negative or zero.
+//
+// @author Jacob Leider
+//
+
+
+// Ball of mass 1.0 kg at a height of 1.0 m
+point(name=ball, pos=[0, 0, 1], vel=[0, 0, 0], acc=[0, 0, 0], mass=1.0);
+
+
+// Gravity
+force(name=gravity, input=[A], output=A.net_force[2], func="-9.81 * A.mass");
+// Air resistance
+force(name=air_res, input=[A], output=A.net_force[2], func="-0.5 * A.vel[2]^3");
+
+
+// Position update
+update(input=[A], output=A.pos[2], func="A.pos[2] + dt * A.vel[2]");
+
+// Velocity update
+// 
+// if y > 0:
+//    v <- v + dt * a
+// if y <= 0:
+//    v <- abs(v + dt * a)
+// 
+// With step functions:
+// 
+// step(v) * (v + dt * a) + step(-v) * abs(v + dt * a)
+update(input=[A], output=A.vel[2], func=
+  "step(A.pos[2]) * (A.vel[2] + dt * A.acc[2]) + step(-1 * A.pos[2]) * abs(A.vel[2] + dt * A.acc[2])");
+
+// Acceleration update
+update(input=[A], output=A.acc[2], func="A.net_force[2] / A.mass");

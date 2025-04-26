@@ -16,7 +16,7 @@ from syzygy import anim_native
 
 if __name__ == '__main__':
     # Simulation objects (particles).
-    state = syzygy.sim.sim_state.create_simulation(open("tests/data/bounce.txt", "r").read())
+    state = syzygy.sim.sim_state.create_simulation(open("tests/data/bounce2.txt", "r").read())
 
     # Simulation parameter (s).
     video_speed = 0.05

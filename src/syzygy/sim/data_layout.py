@@ -93,6 +93,21 @@ class DataLayout:
         return self.particle_size() * self.num_particles()
 
     def state_str(self, data):
+        """
+        Output the state as a string. Format:
+
+            <particle name 1>
+                <property name 1>
+                    1: <data>
+                    2: <data>
+                    ...
+                <property name 2>
+                ...
+            <particle name 2>
+            ...
+
+        Useful for debugging.
+        """
         out = ""
         for particle_name in self.particle_metadata.particle_names:
             out += particle_name + "\n"

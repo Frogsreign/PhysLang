@@ -1,3 +1,0 @@
-point(pos=[x, y, z], vel=[x, y, z], acc=[x, y ,z], m=1, e=1)
-force(input=[a, b], func="a + b")
-update(input=[a, b], output=c, func="a + b")
