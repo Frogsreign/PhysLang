@@ -12,6 +12,8 @@ import string
 
 
 # Default initializers for compilation parameters.
+
+# Generate a random string
 def get_default_func_name():
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
@@ -81,11 +83,6 @@ class SyzygyFunctionCompiler(lark.Visitor):
         tree.expr = child
 
 
-    def abs(self, tree):
-        child = tree.children[0]
-        tree.expr = f"abs({child.expr})"
-
-
     def add(self, tree):
         left, right = tree.children
         tree.expr = format_binary_operation(left.expr, right.expr, "+")
@@ -109,6 +106,11 @@ class SyzygyFunctionCompiler(lark.Visitor):
     def pow(self, tree):
         left, right = tree.children
         tree.expr = format_binary_operation(left.expr, right.expr, "**")
+
+
+    def abs(self, tree):
+        child = tree.children[0]
+        tree.expr = f"abs({child.expr})"
 
 
     # TODO: Needs testing
